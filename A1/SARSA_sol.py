@@ -86,7 +86,7 @@ def sarsa(n_timesteps, learning_rate, gamma, policy='egreedy', epsilon=None, tem
             a = pi.select_action(s, policy=policy, epsilon=epsilon, temp=temp)  # sample action
             start = budget-1
 
-        if plot:
+        if plot and not np.random.randint(0,100):  # plot only in 1% of the cases (when 0 is selected)
             env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=0.1) # Plot the Q-value estimates during Q-learning execution
 
         budget -=1
@@ -104,7 +104,7 @@ def test():
     temp = 1.0
     
     # Plotting parameters
-    plot = False
+    plot = True
 
     rewards, playtime = sarsa(n_timesteps, learning_rate, gamma, policy, epsilon, temp, plot)
     print(f"Obtained rewards: {rewards}")   
@@ -112,7 +112,7 @@ def test():
     # show learning curve
     #game = np.arange(0,len(playtime),1)
     #plt.plot(game,playtime)
-    #plt.show()     
+    #plt.show()
     
 if __name__ == '__main__':
     test()
