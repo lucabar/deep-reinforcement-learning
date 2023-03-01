@@ -11,8 +11,8 @@ import time
 
 from Q_learning_sol import q_learning
 from SARSA_sol import sarsa
-#from MonteCarlo_solution import monte_carlo
-#from Nstep_solution import n_step_Q
+from MonteCarlo_sol import monte_carlo
+from Nstep_sol import n_step_Q
 from Helper import LearningCurvePlot, smooth
 
 
@@ -40,7 +40,7 @@ def average_over_repetitions(backup, n_repetitions, n_timesteps, max_episode_len
     print('Running one setting takes {} minutes'.format((time.time()-now)/60))
     learning_curve = np.mean(reward_results,axis=0) # average over repetitions
     learning_curve = smooth(learning_curve,smoothing_window) # additional smoothing
-    return learning_curve  
+    return learning_curve
 
 def experiment():
     ####### Settings
@@ -51,7 +51,7 @@ def experiment():
     
     # MDP    
     n_timesteps = 8000
-    max_episode_length = 150
+    max_episode_length = 100
     gamma = 1.0
 
     # Parameters we will vary in the experiments, set them to some initial values: 
@@ -76,7 +76,7 @@ def experiment():
     # Execute this assignment in DynamicProgramming.py
     optimal_average_reward_per_timestep = 1.4  # set the optimal average reward per timestep you found in the DP assignment here
     #optimal_average_reward_per_timestep = DynamicProgramming.experiment()
-
+    '''
     #### Assignment 2: Effect of exploration
     policy = 'egreedy'
     epsilons = [0.01,0.05]
@@ -116,12 +116,11 @@ def experiment():
     Plot.add_hline(optimal_average_reward_per_timestep, label="DP optimum")
     stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
     Plot.save(f'exp/figs/on_off_policy_{stamp}.png')
-    return
-    
+    '''
     # ##### Assignment 4: Back-up depth
     policy = 'egreedy'
     epsilon = 0.1 # set epsilon back to original value
-    learning_rate = 0.25
+    learning_rate = 0.4
     backup = 'nstep'
     ns = [1,3,10,30]
     Plot = LearningCurvePlot(title = 'Back-up: depth')    
@@ -134,7 +133,9 @@ def experiment():
                                           gamma, policy, epsilon, temp, smoothing_window, plot, n)
     Plot.add_curve(learning_curve,label='Monte Carlo')        
     Plot.add_hline(optimal_average_reward_per_timestep, label="DP optimum")
-    Plot.save('depth.png')
+    stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
+    Plot.save(f'exp/figs/expl_{stamp}.png')
+    Plot.save(f'exp/figs/depth_{stamp}.png')
 
 if __name__ == '__main__':
     experiment()

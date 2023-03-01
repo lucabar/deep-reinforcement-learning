@@ -11,14 +11,13 @@ import numpy as np
 from Environment import StochasticWindyGridworld
 from Helper import softmax, argmax
 
-class NstepQLearningAgent:
+class MonteCarloAgent:
 
-    def __init__(self, n_states, n_actions, learning_rate, gamma, n):
+    def __init__(self, n_states, n_actions, learning_rate, gamma):
         self.n_states = n_states
         self.n_actions = n_actions
         self.learning_rate = learning_rate
         self.gamma = gamma
-        self.n = n
         self.Q_sa = np.zeros((n_states,n_actions))
         
     def select_action(self, s, policy='egreedy', epsilon=None, temp=None):
@@ -39,29 +38,27 @@ class NstepQLearningAgent:
             a = np.random.choice(4, None, p=probs)
         return a
         
-    def update(self, states, actions, rewards, done):
+    def update(self, states, actions, rewards):
         ''' states is a list of states observed in the episode, of length T_ep + 1 (last state is appended)
         actions is a list of actions observed in the episode, of length T_ep
         rewards is a list of rewards observed in the episode, of length T_ep
         done indicates whether the final s in states is was a terminal state '''
         T_ep = len(actions)
+        _G = 0
         for t in range(T_ep):
-            m = min(self.n, T_ep-t)
-            if done and states[t+m]==states[-1]:
-                _G = sum([self.gamma**i * rewards[t+i] for i in range(m)])
-            else:
-                _G = sum([self.gamma**(i)*rewards[t+i] for i in range(m)]) + self.gamma**m * np.max(self.Q_sa[states[t+m]])
+            _G = np.sum(self.gamma**np.arange(T_ep-t) @ rewards[t:])
             self.Q_sa[states[t],actions[t]] += self.learning_rate * (_G-self.Q_sa[states[t],actions[t]])
-        return done
+        return
 
-
-def n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma, 
-                   policy='egreedy', epsilon=None, temp=None, plot=True, n=5):
+def monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma, 
+                   policy='egreedy', epsilon=None, temp=None, plot=True):
     ''' runs a single repetition of an MC rl agent
     Return: rewards, a vector with the observed rewards at each timestep ''' 
     
     env = StochasticWindyGridworld(initialize_model=False)
-    pi = NstepQLearningAgent(env.n_states, env.n_actions, learning_rate, gamma, n)
+    pi = MonteCarloAgent(env.n_states, env.n_actions, learning_rate, gamma)
+    rewards = []
+
     big_R = []
     budget = n_timesteps
 
@@ -76,37 +73,36 @@ def n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma,
             states, actions, rewards = np.append(states,s), np.append(actions,a), np.append(rewards,r)
             s = s_next
             if done:
+                #print(f'won {budget, t}')
                 break
-        big_R = np.append(big_R,rewards)
-        T_ep = t + 1
+        big_R = np.append(big_R,np.sum(rewards)/(t+1))
         states = np.append(states,s)
-        # update
-        done = pi.update(states, actions, rewards, done)
 
-        if plot and not np.random.randint(0,100):
+        # update
+        pi.update(states, actions, rewards)
+
+        if plot and not np.random.randint(0,500):
             env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=0.1) # Plot the Q-value estimates during n-step Q-learning execution
         budget -= 1
-
-    return big_R
-
+    return big_R 
+    
 def test():
-    n_timesteps = 1000
-    max_episode_length = 100
+    n_timesteps = 10000
+    max_episode_length = 50
     gamma = 1.0
     learning_rate = 0.1
-    n = 5
-    
+
     # Exploration
     policy = 'egreedy' # 'egreedy' or 'softmax' 
     epsilon = 0.1
     temp = 1.0
     
     # Plotting parameters
-    plot = True
+    plot = False
 
-    rewards = n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma, 
-                   policy, epsilon, temp, plot, n=n)
-    print(f"Obtained rewards: {rewards}")    
-
+    rewards = monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma, 
+                   policy, epsilon, temp, plot)
+    print(f"Obtained rewards: {rewards}")  
+            
 if __name__ == '__main__':
     test()
