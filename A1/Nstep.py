@@ -22,21 +22,22 @@ class NstepQLearningAgent:
         self.Q_sa = np.zeros((n_states,n_actions))
         
     def select_action(self, s, policy='egreedy', epsilon=None, temp=None):
-
+        
         if policy == 'egreedy':
             if epsilon is None:
                 raise KeyError("Provide an epsilon")
-
-            if np.random.uniform(0,1) <= epsilon:
-                a = np.random.randint(0,self.n_actions) # randomly chose out of 4 possible actions
-            else:
-                a = argmax(self.Q_sa[s])
-
+                
+            # TO DO: Add own code
+            a = np.random.randint(0,self.n_actions) # Replace this with correct action selection
+            
+                
         elif policy == 'softmax':
             if temp is None:
                 raise KeyError("Provide a temperature")
-            probs = softmax(self.Q_sa[s,np.arange(4)], temp=temp)  # create array of probability to take each action
-            a = np.random.choice(4, None, p=probs)
+                
+            # TO DO: Add own code
+            a = np.random.randint(0,self.n_actions) # Replace this with correct action selection
+            
         return a
         
     def update(self, states, actions, rewards, done):
@@ -44,16 +45,8 @@ class NstepQLearningAgent:
         actions is a list of actions observed in the episode, of length T_ep
         rewards is a list of rewards observed in the episode, of length T_ep
         done indicates whether the final s in states is was a terminal state '''
-        T_ep = len(actions)
-        for t in range(T_ep):
-            m = min(self.n, T_ep-t)
-            if done and states[t+m]==states[-1]:
-                _G = self.gamma**np.arange(m) @ rewards[t:t+m]
-            else:
-                _G = self.gamma**np.arange(m)@rewards[t:t+m] + self.gamma**m * np.max(self.Q_sa[states[t+m]])
-            self.Q_sa[states[t],actions[t]] += self.learning_rate * (_G-self.Q_sa[states[t],actions[t]])
-        return done
-
+        # TO DO: Add own code
+        pass
 
 def n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma, 
                    policy='egreedy', epsilon=None, temp=None, plot=True, n=5):
@@ -62,39 +55,20 @@ def n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma,
     
     env = StochasticWindyGridworld(initialize_model=False)
     pi = NstepQLearningAgent(env.n_states, env.n_actions, learning_rate, gamma, n)
-    big_R = []
-    budget = n_timesteps
+    rewards = []
 
-    while budget:
-        s = env.reset()
-        states, actions, rewards = np.empty(0,dtype=int), np.empty(0,dtype=int), np.empty(0,dtype=float)
-        
-        # collect episode
-        for t in range(max_episode_length):
-            a = pi.select_action(s,policy,epsilon,temp)
-            s_next, r, done = env.step(a)
-            states, actions, rewards = np.append(states,s), np.append(actions,a), np.append(rewards,r)
-            s = s_next
-            if done:
-                #print(f'won @ {budget, t}')
-                break
-        big_R = np.append(big_R,np.sum(rewards)/(t+1))
-        states = np.append(states,s)
-        # update
-        done = pi.update(states, actions, rewards, done)
+    # TO DO: Write your n-step Q-learning algorithm here!
+    
+    # if plot:
+    #    env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=0.1) # Plot the Q-value estimates during n-step Q-learning execution
 
-        if plot and not np.random.randint(0,100):
-            env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=0.1) # Plot the Q-value estimates during n-step Q-learning execution
-        budget -= 1
-
-    return big_R
+    return rewards 
 
 def test():
-    import time
     n_timesteps = 10000
-    max_episode_length = 150
+    max_episode_length = 100
     gamma = 1.0
-    learning_rate = 0.25
+    learning_rate = 0.1
     n = 5
     
     # Exploration
@@ -103,12 +77,11 @@ def test():
     temp = 1.0
     
     # Plotting parameters
-    plot = False
-    start = time.time()
+    plot = True
+
     rewards = n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma, 
                    policy, epsilon, temp, plot, n=n)
-    print(f"Obtained rewards: {rewards}")
-    print(f"it took {time.time()-start}s.")
-
+    print("Obtained rewards: {}".format(rewards))    
+    
 if __name__ == '__main__':
     test()

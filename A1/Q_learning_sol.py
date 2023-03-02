@@ -92,6 +92,7 @@ def q_learning(n_timesteps, learning_rate, gamma, policy='egreedy', epsilon=None
 
 def test():
     import matplotlib.pyplot as plt
+    import time
     
     n_timesteps = 10000
     gamma = 1.0
@@ -104,9 +105,10 @@ def test():
     
     # Plotting parameters
     plot = False
-
+    start = time.time()
     rewards, playtime = q_learning(n_timesteps, learning_rate, gamma, policy, epsilon, temp, plot)
     print(rewards)
+    print(f'it took {time.time()-start}s')
 
     # show learning curve
     #game = np.arange(0,len(playtime),1)

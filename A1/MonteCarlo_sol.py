@@ -21,7 +21,7 @@ class MonteCarloAgent:
         self.Q_sa = np.zeros((n_states,n_actions))
         
     def select_action(self, s, policy='egreedy', epsilon=None, temp=None):
-        
+
         if policy == 'egreedy':
             if epsilon is None:
                 raise KeyError("Provide an epsilon")
@@ -37,7 +37,7 @@ class MonteCarloAgent:
             probs = softmax(self.Q_sa[s,np.arange(4)], temp=temp)  # create array of probability to take each action
             a = np.random.choice(4, None, p=probs)
         return a
-        
+
     def update(self, states, actions, rewards):
         ''' states is a list of states observed in the episode, of length T_ep + 1 (last state is appended)
         actions is a list of actions observed in the episode, of length T_ep
@@ -46,14 +46,14 @@ class MonteCarloAgent:
         T_ep = len(actions)
         _G = 0
         for t in range(T_ep):
-            _G = np.sum(self.gamma**np.arange(T_ep-t) @ rewards[t:])
+            _G = self.gamma**np.arange(T_ep-t) @ rewards[t:]
             self.Q_sa[states[t],actions[t]] += self.learning_rate * (_G-self.Q_sa[states[t],actions[t]])
         return
 
 def monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma, 
                    policy='egreedy', epsilon=None, temp=None, plot=True):
     ''' runs a single repetition of an MC rl agent
-    Return: rewards, a vector with the observed rewards at each timestep ''' 
+    Return: rewards, a vector with the observed rewards at each timestep '''
     
     env = StochasticWindyGridworld(initialize_model=False)
     pi = MonteCarloAgent(env.n_states, env.n_actions, learning_rate, gamma)
@@ -65,7 +65,7 @@ def monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma,
     while budget:
         s = env.reset()
         states, actions, rewards = np.empty(0,dtype=int), np.empty(0,dtype=int), np.empty(0,dtype=float)
-        
+
         # collect episode
         for t in range(max_episode_length):
             a = pi.select_action(s,policy,epsilon,temp)
@@ -84,8 +84,8 @@ def monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma,
         if plot and not np.random.randint(0,500):
             env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=0.1) # Plot the Q-value estimates during n-step Q-learning execution
         budget -= 1
-    return big_R 
-    
+    return big_R
+
 def test():
     n_timesteps = 10000
     max_episode_length = 50
@@ -93,16 +93,16 @@ def test():
     learning_rate = 0.1
 
     # Exploration
-    policy = 'egreedy' # 'egreedy' or 'softmax' 
+    policy = 'egreedy' # 'egreedy' or 'softmax'
     epsilon = 0.1
     temp = 1.0
-    
+
     # Plotting parameters
     plot = False
 
     rewards = monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma, 
                    policy, epsilon, temp, plot)
-    print(f"Obtained rewards: {rewards}")  
-            
+    print(f"Obtained rewards: {rewards}")
+
 if __name__ == '__main__':
     test()

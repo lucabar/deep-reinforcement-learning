@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-
 Practical for course 'Reinforcement Learning',
 Leiden University, The Netherlands
 By Thomas Moerland
@@ -35,7 +34,7 @@ class StochasticWindyGridworld:
         self.wind_blows_proportion = 0.8         
 
         self.reward_per_step = -1.0 # default reward on every step that does not reach a goal
-        self.goal_locations = [[7,3]] # [[7,3]] a vector specifying the goal locations in [[x1,y1],[x2,y2]] format
+        self.goal_locations = [[7,3]] # [[6,2]] a vector specifying the goal locations in [[x1,y1],[x2,y2]] format
         self.goal_rewards = [40] # a vector specifying the associated rewards with the goals in self.goal_locations, in [r1,r2] format
         
         # Initialize model
@@ -86,6 +85,7 @@ class StochasticWindyGridworld:
             return self.p_sas[s,a], self.r_sas[s,a]
         else:
             raise ValueError("set initialize_model=True when creating Environment")
+            
 
     def render(self,Q_sa=None,plot_optimal_policy=False,step_pause=0.001):
         ''' Plot the environment 
@@ -115,11 +115,6 @@ class StochasticWindyGridworld:
         # Draw figure
         plt.pause(step_pause)    
 
-    def save(self, name):
-        plt.savefig(f'exp/figs/{name}.pdf')
-        #self.render(self,Q_sa=Q_sa,plot_optimal_policy=True,step_pause=0.2)
-        return
-
     def _state_to_location(self,state):
         ''' bring a state index to an (x,y) location of the agent '''
         return np.array(np.unravel_index(state,self.shape))
@@ -141,12 +136,11 @@ class StochasticWindyGridworld:
                 s_location = self._state_to_location(s)  
                     
                 # if s is goal state (terminal) make it a self-loop without rewards
-                # check whether current location is (in all coords) equal to any (one) of the goal locations
                 state_is_a_goal = np.any([np.all(goal_location == s_location) for goal_location in self.goal_locations])
                 if state_is_a_goal: 
                     # Make actions from this state a self-loop with 0 reward.
-                    p_sas[s,a,s] = 1.0  # self-loop: probability going from s to s is 1.0=100% for any action
-                    r_sas[s,a,] = np.zeros(self.n_states)  # by definition value of terminal state (sum of expected future rewards) is 0
+                    p_sas[s,a,s] = 1.0 
+                    r_sas[s,a,] = np.zeros(self.n_states)  
                 else:
                     # check what happens if the wind blows:
                     next_location_with_wind = np.copy(s_location) 
@@ -154,7 +148,7 @@ class StochasticWindyGridworld:
                     next_location_with_wind = np.clip(next_location_with_wind,(0,0),np.array(self.shape)-1) # bound within grid
                     next_location_with_wind[1] += self.winds[next_location_with_wind[0]] # Apply effect of wind
                     next_location_with_wind = np.clip(next_location_with_wind,(0,0),np.array(self.shape)-1) # bound within grid
-                    next_state_with_wind = self._location_to_state(next_location_with_wind)
+                    next_state_with_wind = self._location_to_state(next_location_with_wind)   
                     
                     # Update p_sas and r_sas
                     p_sas[s,a,next_state_with_wind] += self.wind_blows_proportion
@@ -172,11 +166,11 @@ class StochasticWindyGridworld:
                     p_sas[s,a,next_state_without_wind] += (1-self.wind_blows_proportion)
                     for (i,goal) in enumerate(self.goal_locations):
                         if np.all(next_state_without_wind == goal): # reached a goal!
-                            r_sas[s,a,next_state_without_wind]  = self.goal_rewards[i]
+                            r_sas[s,a,next_state_without_wind]  = self.goal_rewards[i] 
 
         self.p_sas = p_sas
         self.r_sas = r_sas
-        return
+        return 
 
     def _initialize_plot(self):
         self.fig,self.ax = plt.subplots()#figsize=(self.width, self.height+1)) # Start a new figure
@@ -211,7 +205,7 @@ class StochasticWindyGridworld:
             self.ax.text(self.goal_locations[i][0]+0.05,self.goal_locations[i][1]+0.75,text, fontsize=20, c=colour)
 
         # Add agent
-        self.agent_circle = Circle(self.agent_location+0.5,0.3,color='magenta')
+        self.agent_circle = Circle(self.agent_location+0.5,0.3)
         self.ax.add_patch(self.agent_circle)
         
     def _initialize_Q_labels(self):
@@ -220,11 +214,8 @@ class StochasticWindyGridworld:
             state_location = self._state_to_location(state)
             self.Q_labels.append([])
             for action in range(self.n_actions):
-                if action in [0,2]:
-                    plot_location = np.array(state_location) + 0.42 + 0.3 * np.array(self.action_effects[action])
-                elif action in [1,3]:
-                    plot_location = np.array(state_location) + 0.42 + 0.34 * np.array(self.action_effects[action])
-                next_label = self.ax.text(plot_location[0],plot_location[1]+0.03,0.0,fontsize=6)
+                plot_location = np.array(state_location) + 0.42 + 0.35 * np.array(self.action_effects[action])
+                next_label = self.ax.text(plot_location[0],plot_location[1]+0.03,0.0,fontsize=8)
                 self.Q_labels[state].append(next_label)
 
     def _plot_arrows(self,Q_sa):
@@ -237,7 +228,7 @@ class StochasticWindyGridworld:
             max_actions = full_argmax(Q_sa[state])
             for max_action in max_actions:
                 new_arrow = arrow = Arrow(plot_location[0],plot_location[1],self.action_effects[max_action][0]*0.2,
-                                          self.action_effects[max_action][1]*0.2, width=0.05,color='magenta')
+                                          self.action_effects[max_action][1]*0.2, width=0.05,color='k')
                 ax_arrow = self.ax.add_patch(new_arrow)
                 self.arrows.append(ax_arrow)
 
@@ -247,7 +238,7 @@ def full_argmax(x):
 
 def test():
     # Hyperparameters
-    n_test_steps = 10
+    n_test_steps = 25
     step_pause = 0.5
     
     # Initialize environment and Q-array
@@ -261,7 +252,7 @@ def test():
         s_next,r,done = env.step(a) # execute action in the environment
         p_sas,r_sas = env.model(s,a)
         print("State {}, Action {}, Reward {}, Next state {}, Done {}, p(s'|s,a) {}, r(s,a,s') {}".format(s,a,r,s_next,done,p_sas,r_sas))
-        env.render(Q_sa=None,plot_optimal_policy=False,step_pause=step_pause) # display the environment
+        env.render(Q_sa=Q_sa,plot_optimal_policy=False,step_pause=step_pause) # display the environment
         if done: 
             s = env.reset()
         else: 
