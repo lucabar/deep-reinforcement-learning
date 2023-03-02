@@ -85,7 +85,11 @@ class StochasticWindyGridworld:
             return self.p_sas[s,a], self.r_sas[s,a]
         else:
             raise ValueError("set initialize_model=True when creating Environment")
-            
+
+    def save(self, name):
+            plt.savefig(f'{name}.pdf')
+            #self.render(self,Q_sa=Q_sa,plot_optimal_policy=True,step_pause=0.2)
+            return
 
     def render(self,Q_sa=None,plot_optimal_policy=False,step_pause=0.001):
         ''' Plot the environment 

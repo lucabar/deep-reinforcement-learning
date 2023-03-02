@@ -75,6 +75,7 @@ def n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma,
             s_next, r, done = env.step(a)
             states, actions, rewards = np.append(states,s), np.append(actions,a), np.append(rewards,r)
             s = s_next
+            budget -=1
             if done:
                 #print(f'won @ {budget, t}')
                 break
@@ -85,7 +86,6 @@ def n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma,
 
         if plot and not np.random.randint(0,100):
             env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=0.1) # Plot the Q-value estimates during n-step Q-learning execution
-        budget -= 1
 
     return big_R
 

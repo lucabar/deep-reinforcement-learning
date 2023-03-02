@@ -94,7 +94,7 @@ def test():
     import matplotlib.pyplot as plt
     import time
     
-    n_timesteps = 10000
+    n_timesteps = 1000
     gamma = 1.0
     learning_rate = 0.1
 
@@ -104,7 +104,7 @@ def test():
     temp = 1.0
     
     # Plotting parameters
-    plot = False
+    plot = True
     start = time.time()
     rewards, playtime = q_learning(n_timesteps, learning_rate, gamma, policy, epsilon, temp, plot)
     print(rewards)

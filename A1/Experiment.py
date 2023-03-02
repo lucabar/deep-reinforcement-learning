@@ -51,7 +51,7 @@ def experiment():
     plot = False # Plotting is very slow, switch it off when we run repetitions
 
     # MDP
-    n_timesteps = 10000  # 5k
+    n_timesteps = 50000  # 5k
     max_episode_length = 150  # 150
     gamma = 1.0
 
@@ -99,8 +99,8 @@ def experiment():
         Plot.add_hline(optimal_average_reward_per_timestep, label="DP optimum")
 
         stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
-        Plot.save(f'exp/figs/expl_{stamp}.png')
-        with open('exp/info.txt', 'a') as f:
+        Plot.save(f'figs/expl_{stamp}.png')
+        with open('info.txt', 'a') as f:
             f.write(f'::: {stamp} :::\n{epsilons}\n{temps}\n{learning_rate}\n\n')
 
     ###### Assignment 3: Q-learning versus SARSA
@@ -116,8 +116,9 @@ def experiment():
             Plot.add_curve(learning_curve,label=r'{}, $\alpha$ = {} '.format(backup_labels[backup],learning_rate))
     Plot.add_hline(optimal_average_reward_per_timestep, label="DP optimum")
     stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
-    Plot.save(f'exp/figs/on_off_policy_{stamp}.png')
-    n_timesteps = 2000
+    Plot.save(f'figs/on_off_policy_{stamp}.png')
+
+
     # ##### Assignment 4: Back-up depth
     policy = 'egreedy'
     epsilon = 0.1 # set epsilon back to original value
@@ -135,7 +136,9 @@ def experiment():
     Plot.add_curve(learning_curve,label='Monte Carlo')
     Plot.add_hline(optimal_average_reward_per_timestep, label="DP optimum")
     stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
-    Plot.save(f'exp/figs/depth_{stamp}.png')
+    Plot.save(f'figs/depth_{stamp}.png')
+    with open('info.txt', 'a') as f:
+            f.write(f'::: {stamp} :::\n ns:{ns} \n steps{n_timesteps}\n lr:{learning_rate}\n T_ep:{max_episode_length}\n reps:{n_repetitions}\n\n')
 
 
 if __name__ == '__main__':
