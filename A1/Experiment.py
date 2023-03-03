@@ -79,7 +79,6 @@ def experiment():
     # Execute this assignment in DynamicProgramming.py
     optimal_average_reward_per_timestep = 1.4  # set the optimal average reward per timestep you found in the DP assignment here
     #optimal_average_reward_per_timestep = DynamicProgramming.experiment()
-    '''
     #### Assignment 2: Effect of exploration
     policy = 'egreedy'
     epsilons = [0.02,0.1,0.3]
@@ -141,6 +140,7 @@ def experiment():
     Plot.save(f'figs/depth_{stamp}.png')
     with open('info.txt', 'a') as f:
             f.write(f'::: {stamp} :::\n ns:{ns} \n steps{n_timesteps}\n lr:{learning_rate}\n T_ep:{max_episode_length}\n reps:{n_repetitions}\n\n')
+'''
 
 
 if __name__ == '__main__':

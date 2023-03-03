@@ -195,7 +195,7 @@ class StochasticWindyGridworld:
 
         # Indicate start state
         self.ax.add_patch(Rectangle(self.start_location,1.0,1,0, linewidth=0, facecolor='b',alpha=0.2))
-        self.ax.text(self.start_location[0]+0.05,self.start_location[1]+0.75, 'S', fontsize=20, c='b')
+        self.ax.text(self.start_location[0]+0.05,self.start_location[1]+0.75, 'S', fontsize=16, c='b')
 
         # Indicate goal states
         for i in range(len(self.goal_locations)): 
@@ -206,7 +206,7 @@ class StochasticWindyGridworld:
                 colour = 'r'
                 text = '{}'.format(self.goal_rewards[i])
             self.ax.add_patch(Rectangle(self.goal_locations[i],1.0,1,0, linewidth=0, facecolor=colour,alpha=0.2))
-            self.ax.text(self.goal_locations[i][0]+0.05,self.goal_locations[i][1]+0.75,text, fontsize=20, c=colour)
+            self.ax.text(self.goal_locations[i][0]+0.05,self.goal_locations[i][1]+0.75,text, fontsize=16, c=colour)
 
         # Add agent
         self.agent_circle = Circle(self.agent_location+0.5,0.3)
@@ -219,6 +219,12 @@ class StochasticWindyGridworld:
             self.Q_labels.append([])
             for action in range(self.n_actions):
                 plot_location = np.array(state_location) + 0.42 + 0.35 * np.array(self.action_effects[action])
+                if action == 1:
+                    plot_location += np.arange(0,2) * 0.1 - 0.1 * np.array(self.action_effects[action])
+                elif action == 3:
+                    plot_location -= np.arange(0,2) * 0.1 - 0.1 * np.array(self.action_effects[action])
+                else:
+                    plot_location += 0.1 * np.array(self.action_effects[3])
                 next_label = self.ax.text(plot_location[0],plot_location[1]+0.03,0.0,fontsize=8)
                 self.Q_labels[state].append(next_label)
 
