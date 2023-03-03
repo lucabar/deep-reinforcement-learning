@@ -34,6 +34,8 @@ def average_over_repetitions(backup, n_repetitions, n_timesteps, max_episode_len
         elif backup == 'nstep':
             rewards = n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma, 
                    policy, epsilon, temp, plot, n=n)
+        if rep in np.arange(5,50,5) :
+            print(rep, backup)
 
         reward_results[rep] = rewards
 
@@ -51,7 +53,7 @@ def experiment():
     plot = False # Plotting is very slow, switch it off when we run repetitions
 
     # MDP
-    n_timesteps = 50000  # 5k
+    n_timesteps = 100000  # 5k
     max_episode_length = 150  # 150
     gamma = 1.0
 
@@ -77,7 +79,7 @@ def experiment():
     # Execute this assignment in DynamicProgramming.py
     optimal_average_reward_per_timestep = 1.4  # set the optimal average reward per timestep you found in the DP assignment here
     #optimal_average_reward_per_timestep = DynamicProgramming.experiment()
-    
+    '''
     #### Assignment 2: Effect of exploration
     policy = 'egreedy'
     epsilons = [0.02,0.1,0.3]
@@ -118,7 +120,7 @@ def experiment():
     stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
     Plot.save(f'figs/on_off_policy_{stamp}.png')
 
-
+'''
     # ##### Assignment 4: Back-up depth
     policy = 'egreedy'
     epsilon = 0.1 # set epsilon back to original value

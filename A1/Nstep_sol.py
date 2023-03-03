@@ -65,7 +65,7 @@ def n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma,
     big_R = []
     budget = n_timesteps
 
-    while budget:
+    while budget>=0:
         s = env.reset()
         states, actions, rewards = np.empty(0,dtype=int), np.empty(0,dtype=int), np.empty(0,dtype=float)
         
@@ -74,12 +74,13 @@ def n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma,
             a = pi.select_action(s,policy,epsilon,temp)
             s_next, r, done = env.step(a)
             states, actions, rewards = np.append(states,s), np.append(actions,a), np.append(rewards,r)
+            big_R = np.append(big_R,r)
             s = s_next
             budget -=1
             if done:
                 #print(f'won @ {budget, t}')
                 break
-        big_R = np.append(big_R,np.sum(rewards)/(t+1))
+        
         states = np.append(states,s)
         # update
         done = pi.update(states, actions, rewards, done)
@@ -87,11 +88,11 @@ def n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma,
         if plot and not np.random.randint(0,100):
             env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=0.1) # Plot the Q-value estimates during n-step Q-learning execution
 
-    return big_R
+    return big_R[:n_timesteps]
 
 def test():
     import time
-    n_timesteps = 10000
+    n_timesteps = 50000
     max_episode_length = 150
     gamma = 1.0
     learning_rate = 0.25
@@ -108,7 +109,7 @@ def test():
     rewards = n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma, 
                    policy, epsilon, temp, plot, n=n)
     print(f"Obtained rewards: {rewards}")
-    print(f"it took {time.time()-start}s.")
+    print(f"it took {(time.time()-start)/60}mins.")
 
 if __name__ == '__main__':
     test()

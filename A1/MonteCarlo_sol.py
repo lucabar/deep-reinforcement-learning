@@ -62,7 +62,7 @@ def monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma,
     big_R = []
     budget = n_timesteps
 
-    while budget:
+    while budget>=0:
         s = env.reset()
         states, actions, rewards = np.empty(0,dtype=int), np.empty(0,dtype=int), np.empty(0,dtype=float)
 
@@ -72,11 +72,11 @@ def monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma,
             s_next, r, done = env.step(a)
             states, actions, rewards = np.append(states,s), np.append(actions,a), np.append(rewards,r)
             s = s_next
+            big_R = np.append(big_R,r)
             budget -= 1
             if done:
                 #print(f'won {budget, t}')
                 break
-        big_R = np.append(big_R,np.sum(rewards)/(t+1))
         states = np.append(states,s)
 
         # update
@@ -84,7 +84,7 @@ def monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma,
 
         if plot and not np.random.randint(0,500):
             env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=0.1) # Plot the Q-value estimates during n-step Q-learning execution
-    return big_R
+    return big_R[:n_timesteps]
 
 def test():
     n_timesteps = 10000
