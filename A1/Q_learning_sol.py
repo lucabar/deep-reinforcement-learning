@@ -25,10 +25,10 @@ class QLearningAgent:
             if epsilon is None:
                 raise KeyError("Provide an epsilon")
 
-            if np.random.uniform(0,1) <= epsilon:
+            if np.random.uniform(0,1) < epsilon:
                 a = np.random.randint(0,self.n_actions) # randomly chose out of 4 possible actions
             else:
-                a = argmax(self.Q_sa[s])
+                a = argmax(self.Q_sa[s])  # greedy policy
 
         elif policy == 'softmax':
             if temp is None:
@@ -52,20 +52,11 @@ def q_learning(n_timesteps, learning_rate, gamma, policy='egreedy', epsilon=None
     pi = QLearningAgent(env.n_states, env.n_actions, learning_rate, gamma)
     budget = n_timesteps
     rewards = []
-    playtime = []
-    snap = np.arange(1,10000,200) # take snapshots of iterations
-    s_start = env._location_to_state(env.start_location)  # np.random.choice(env.n_states)
+    s_start = env._location_to_state(env.start_location)  # due to problems in softmax with the initial state being wrong format
     s = s_start
 
-    start = n_timesteps
 
     while budget:
-        '''
-        if budget in snap:
-            # show rendering
-            print(f"@{budget}")
-            env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=3)
-        '''
         a = pi.select_action(s, policy=policy, epsilon=epsilon, temp=temp)  # sample action
         s_next, r, done = env.step(a)  # simulate environment (reaction/step)
         done = pi.update(s, a, r, s_next, done)  # update Q-value-table
@@ -73,21 +64,14 @@ def q_learning(n_timesteps, learning_rate, gamma, policy='egreedy', epsilon=None
         s = s_next
 
         if done:
-            ####  game info
-            playtime.append(start-budget)
-            #print(f"finished after {playtime[-1]} steps.")
-            #env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=0.5)
-            ####  game info end
-
             env.reset()
             s = s_start
-            start = budget-1
 
         if plot:
             env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=0.1) # Plot the Q-value estimates during Q-learning execution
 
         budget -=1
-    return rewards, playtime
+    return rewards
 
 
 def test():
@@ -104,17 +88,8 @@ def test():
     temp = 1.0
     
     # Plotting parameters
-    plot = True
-    start = time.time()
-    rewards, playtime = q_learning(n_timesteps, learning_rate, gamma, policy, epsilon, temp, plot)
+    plot = False
+    rewards = q_learning(n_timesteps, learning_rate, gamma, policy, epsilon, temp, plot)
     print(rewards)
-    print(f'it took {time.time()-start}s')
-
-    # show learning curve
-    #game = np.arange(0,len(playtime),1)
-    #print(f"Obtained rewards: {rewards}.")
-    #plt.plot(game,playtime)
-    #plt.show()
-
 if __name__ == '__main__':
     test()

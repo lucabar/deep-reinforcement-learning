@@ -26,7 +26,7 @@ class SarsaAgent:
             if epsilon is None:
                 raise KeyError("Provide an epsilon")
 
-            if np.random.uniform(0,1) <= epsilon:
+            if np.random.uniform(0,1) < epsilon:
                 a = np.random.randint(0,self.n_actions) # randomly chose out of 4 possible actions
             else:
                 a = argmax(self.Q_sa[s])
@@ -53,22 +53,12 @@ def sarsa(n_timesteps, learning_rate, gamma, policy='egreedy', epsilon=None, tem
     pi = SarsaAgent(env.n_states, env.n_actions, learning_rate, gamma)
     budget = n_timesteps
     rewards = []
-    playtime = []
-    #### take snapshots of iterations
-    snap = np.arange(1,10000,200)
-    ###
+
     s = env._location_to_state(env.start_location)  # sample state as integer, not loc!
     a = pi.select_action(s, policy=policy, epsilon=epsilon, temp=temp)  # sample action
 
-    start = n_timesteps
+    while budget > 0:
 
-    while budget:
-        '''
-        if budget in snap:
-            # show rendering
-            print(f"@{budget}")
-            env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=3)
-        '''
         s_next, r, done = env.step(a)  # simulate environment (reaction/step)
         a_next = pi.select_action(s_next, policy=policy, epsilon=epsilon, temp=temp)  # sample action
         done = pi.update(s, a, r, s_next, a_next, done)  # update Q-value-table
@@ -76,21 +66,14 @@ def sarsa(n_timesteps, learning_rate, gamma, policy='egreedy', epsilon=None, tem
         s, a = s_next, a_next
 
         if done:
-            ####  game info
-            playtime.append(start-budget)
-            #print(f"finished after {playtime[-1]} steps.")
-            #env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=0.5)
-            ####  game info end
-
             s = env.reset()
             a = pi.select_action(s, policy=policy, epsilon=epsilon, temp=temp)  # sample action
-            start = budget-1
 
-        if plot and not np.random.randint(0,100):  # plot only in 1% of the cases (when 0 is selected)
+        if plot:  # plot only in 1% of the cases (when 0 is selected)
             env.render(Q_sa=pi.Q_sa,plot_optimal_policy=True,step_pause=0.1) # Plot the Q-value estimates during Q-learning execution
 
         budget -=1
-    return rewards, playtime
+    return rewards
 
 
 def test():
@@ -104,15 +87,10 @@ def test():
     temp = 1.0
     
     # Plotting parameters
-    plot = True
+    plot = False
 
-    rewards, playtime = sarsa(n_timesteps, learning_rate, gamma, policy, epsilon, temp, plot)
+    rewards = sarsa(n_timesteps, learning_rate, gamma, policy, epsilon, temp, plot)
     print(f"Obtained rewards: {rewards}")   
-
-    # show learning curve
-    #game = np.arange(0,len(playtime),1)
-    #plt.plot(game,playtime)
-    #plt.show()
     
 if __name__ == '__main__':
     test()

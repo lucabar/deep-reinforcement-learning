@@ -26,7 +26,7 @@ class MonteCarloAgent:
             if epsilon is None:
                 raise KeyError("Provide an epsilon")
 
-            if np.random.uniform(0,1) <= epsilon:
+            if np.random.uniform(0,1) < epsilon:
                 a = np.random.randint(0,self.n_actions) # randomly chose out of 4 possible actions
             else:
                 a = argmax(self.Q_sa[s])
@@ -62,7 +62,7 @@ def monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma,
     big_R = []
     budget = n_timesteps
 
-    while budget>=0:
+    while budget>0:
         s = env.reset()
         states, actions, rewards = np.empty(0,dtype=int), np.empty(0,dtype=int), np.empty(0,dtype=float)
 
@@ -75,7 +75,6 @@ def monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma,
             big_R = np.append(big_R,r)
             budget -= 1
             if done:
-                #print(f'won {budget, t}')
                 break
         states = np.append(states,s)
 

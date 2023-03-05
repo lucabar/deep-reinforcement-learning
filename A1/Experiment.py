@@ -25,22 +25,19 @@ def average_over_repetitions(backup, n_repetitions, n_timesteps, max_episode_len
     for rep in range(n_repetitions): # Loop over repetitions
         if backup == 'q':
             #continue
-            rewards, playtime = q_learning(n_timesteps, learning_rate, gamma, policy, epsilon, temp, plot)
+            rewards = q_learning(n_timesteps, learning_rate, gamma, policy, epsilon, temp, plot)
         elif backup == 'sarsa':
-            rewards, playtime = sarsa(n_timesteps, learning_rate, gamma, policy, epsilon, temp, plot)
+            rewards = sarsa(n_timesteps, learning_rate, gamma, policy, epsilon, temp, plot)
         elif backup == 'mc':
             rewards = monte_carlo(n_timesteps, max_episode_length, learning_rate, gamma, 
                    policy, epsilon, temp, plot)
         elif backup == 'nstep':
             rewards = n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma, 
                    policy, epsilon, temp, plot, n=n)
-        if rep in np.arange(5,50,5) :
-            print(rep, backup)
 
         reward_results[rep] = rewards
 
-    print(backup)
-    print(f'Running one setting takes {(time.time()-now)/60} minutes and it is {time.strftime("%d_%H%M%S",time.gmtime(time.time()))}')
+    print(f'Running one setting takes {(time.time()-now)/60} minutes.')
     learning_curve = np.mean(reward_results,axis=0) # average over repetitions
     learning_curve = smooth(learning_curve,smoothing_window) # additional smoothing
     return learning_curve
@@ -48,13 +45,13 @@ def average_over_repetitions(backup, n_repetitions, n_timesteps, max_episode_len
 def experiment():
     ####### Settings
     # Experiment
-    n_repetitions = 50
+    n_repetitions = 10
     smoothing_window = 1001
     plot = False # Plotting is very slow, switch it off when we run repetitions
 
     # MDP
-    n_timesteps = 100000  # 5k
-    max_episode_length = 150  # 150
+    n_timesteps = 100000  #
+    max_episode_length = 150  #
     gamma = 1.0
 
     # Parameters we will vary in the experiments, set them to some initial values:
@@ -77,12 +74,12 @@ def experiment():
 
     #### Assignment 1: Dynamic Programming
     # Execute this assignment in DynamicProgramming.py
-    optimal_average_reward_per_timestep = 1.4  # set the optimal average reward per timestep you found in the DP assignment here
-    #optimal_average_reward_per_timestep = DynamicProgramming.experiment()
+    optimal_average_reward_per_timestep = 1.3  # set the optimal average reward per timestep you found in the DP assignment here
+    #optimal_average_reward_per_timestep = DynamicProgramming.experiment()  # optional way to get to the avg reward from DP
     #### Assignment 2: Effect of exploration
     policy = 'egreedy'
     epsilons = [0.02,0.1,0.3]
-    rates = [0.25]
+    rates = [0.25]  # formerly conducted a grid search on learning rates here
     #learning_rate = 0.25
     backup = 'q'
     for learning_rate in rates:
@@ -100,9 +97,7 @@ def experiment():
         Plot.add_hline(optimal_average_reward_per_timestep, label="DP optimum")
 
         stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
-        Plot.save(f'figs/expl_{stamp}.png')
-        with open('info.txt', 'a') as f:
-            f.write(f'::: {stamp} :::\n{epsilons}\n{temps}\n{learning_rate}\n\n')
+        Plot.save(f'exploration_{stamp}.png')
 
     ###### Assignment 3: Q-learning versus SARSA
     policy = 'egreedy'
@@ -117,9 +112,9 @@ def experiment():
             Plot.add_curve(learning_curve,label=r'{}, $\alpha$ = {} '.format(backup_labels[backup],learning_rate))
     Plot.add_hline(optimal_average_reward_per_timestep, label="DP optimum")
     stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
-    Plot.save(f'figs/on_off_policy_{stamp}.png')
+    Plot.save(f'on_off_policy_{stamp}.png')
 
-'''
+
     # ##### Assignment 4: Back-up depth
     policy = 'egreedy'
     epsilon = 0.1 # set epsilon back to original value
@@ -137,10 +132,7 @@ def experiment():
     Plot.add_curve(learning_curve,label='Monte Carlo')
     Plot.add_hline(optimal_average_reward_per_timestep, label="DP optimum")
     stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
-    Plot.save(f'figs/depth_{stamp}.png')
-    with open('info.txt', 'a') as f:
-            f.write(f'::: {stamp} :::\n ns:{ns} \n steps{n_timesteps}\n lr:{learning_rate}\n T_ep:{max_episode_length}\n reps:{n_repetitions}\n\n')
-'''
+    Plot.save(f'depth_{stamp}.png')
 
 
 if __name__ == '__main__':

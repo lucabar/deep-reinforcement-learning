@@ -27,7 +27,7 @@ class NstepQLearningAgent:
             if epsilon is None:
                 raise KeyError("Provide an epsilon")
 
-            if np.random.uniform(0,1) <= epsilon:
+            if np.random.uniform(0,1) < epsilon:
                 a = np.random.randint(0,self.n_actions) # randomly chose out of 4 possible actions
             else:
                 a = argmax(self.Q_sa[s])
@@ -65,7 +65,7 @@ def n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma,
     big_R = []
     budget = n_timesteps
 
-    while budget>=0:
+    while budget>0:
         s = env.reset()
         states, actions, rewards = np.empty(0,dtype=int), np.empty(0,dtype=int), np.empty(0,dtype=float)
         
@@ -78,7 +78,6 @@ def n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma,
             s = s_next
             budget -=1
             if done:
-                #print(f'won @ {budget, t}')
                 break
         
         states = np.append(states,s)
@@ -105,11 +104,9 @@ def test():
     
     # Plotting parameters
     plot = False
-    start = time.time()
     rewards = n_step_Q(n_timesteps, max_episode_length, learning_rate, gamma, 
                    policy, epsilon, temp, plot, n=n)
     print(f"Obtained rewards: {rewards}")
-    print(f"it took {(time.time()-start)/60}mins.")
 
 if __name__ == '__main__':
     test()

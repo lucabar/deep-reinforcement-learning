@@ -47,17 +47,10 @@ def Q_value_iteration(env, gamma=1.0, threshold=0.001):
                 Q = QIagent.Q_sa[s,a]
                 QIagent.update(s,a,env.p_sas,env.r_sas)
                 max_error = max(abs(QIagent.Q_sa[s,a]-Q),max_error)
-        #print(QIagent.Q_sa[52])
         # Plot current Q-value estimates & print max error
         env.render(Q_sa=QIagent.Q_sa,plot_optimal_policy=True,step_pause=0.1)
-        if count == 1:
-            env.save(f'start-pic-{QIagent.name}')
-        elif count == 9:
-            env.save(f'mid-pic-{QIagent.name}')
         #print("Q-value iteration, iteration {}, max error {}".format(count,max_error))
         count +=1
-    #print(count)
-    env.save(f'end-pic-{QIagent.name}')
 
     return QIagent
 
@@ -75,29 +68,22 @@ def experiment():
     print(f"Converged optimal value at start (0,3): V*(s=3)= {round(V_3,1)}.")
 
     
-    exp_step = np.ceil(env.goal_rewards[0] - V_3 + 1)
+    exp_step = np.ceil(env.goal_rewards[0] - V_3 + 1)  # all -1-reward steps plus one +40-reward step
     print(f"expected average # of steps: {exp_step}")
     mean_reward_per_timestep = (V_3)/exp_step
     # of course there exist no half steps (or .2), so the outcome of this will have to be
     # rounded up for the game to finish. the rounded down value can not possibly be enough
 
     Ret = 0
-    reps = 5  # amnt of repitions of experiment
-    count = np.zeros((reps))  # counter of how long rep went
 
-    for k in range(reps):
-        done = False
-        print('Reset!')
-        s = env.reset()
-        while not done:
-            count[k] += 1
-            a = QIagent.select_action(s)
-            s_next, r, done = env.step(a)
-            #env.render(Q_sa=QIagent.Q_sa,plot_optimal_policy=True,step_pause=0.1)
-            s = s_next
-            Ret += r  # this includes final reward of +40
-        print(f"actual counts: {count}")
-        print(f"actual avg count: {np.sum(count)/(k+1)}")
+    done = False
+    s = env.reset()
+    while not done:
+        a = QIagent.select_action(s)
+        s_next, r, done = env.step(a)
+        env.render(Q_sa=QIagent.Q_sa,plot_optimal_policy=True,step_pause=0.1)
+        s = s_next
+        Ret += r  # this includes final reward of +40
 
     print(f"Mean reward per timestep under optimal policy: {round(mean_reward_per_timestep,2)}")
     return mean_reward_per_timestep
