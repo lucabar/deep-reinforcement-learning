@@ -34,6 +34,7 @@ max_buffer_length = 1e4
 train_model_freq = 4
 update_target_freq = 1e3
 max_episode_length = 100
+batch_size = 32
 
 loss_func = keras.losses.Huber()
 
@@ -80,7 +81,7 @@ def draw_action(s, net, epsilon, greedy=True):
     if greedy or np.random.uniform(0.,1) > epsilon:
         return np.argmax(action_probs)
     else:
-        return np.random.randint(nb_actions)
+        return np.random.randint(0,nb_actions)
 
 
 
@@ -92,8 +93,12 @@ optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
 #q_net.predict(observation)
 
 while True:
+    '''work in progress..'''
     ep_reward = 0
+
     for timestep in range(1,max_episode_length):
+        if len(buffer) > max_buffer_length:
+            buffer.pop(np.random.randint(len(buffer)))
 
         # draw action
         action = draw_action(state, q_net, epsilon = 0.9, greedy=False)
@@ -102,6 +107,16 @@ while True:
         ep_reward += r
         buffer.append([state, action, r, next_state])
         state = next_state
+
+        # sample buffer
+        sample = buffer[[np.random.randint(0,len(buffer),size=batch_size)]]
+
+        if timestep % train_model_freq == 0:
+            print("update")
+
+        if timestep % update_target_freq == 0:
+            target_q_net = q_net
+            print("target")
 
 
         done = term or trunk
