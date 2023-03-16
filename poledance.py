@@ -31,9 +31,9 @@ state, info = env.reset()
 
 
 # hyperparameters
-epsilon = 0.05
+epsilon = 0.1
 output_activation = None
-learning_rate = 0.05
+learning_rate = 0.1
 max_buffer_length = int(1e4)
 train_model_freq = 4
 update_target_freq = int(100)

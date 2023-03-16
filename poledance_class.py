@@ -169,7 +169,7 @@ while True:
         # draw action
         action = agent.draw_action(state)
         next_state, r, term, trunk, info = env.step(action=action)
-        agent.buffer_update(state, action, r, term, trunk)
+        agent.buffer_update(state, r)
         ep_reward += r
 
         if len(agent.state_buffer) > max_buffer_length:
@@ -199,9 +199,9 @@ while True:
                 % (ep_count, float(loss))
             )
 
-    if ep_count > 1000:
+    if ep_count > 500:
         plt.scatter(np.arange(len(agent.big_R)), agent.big_R)
-        plt.savefig('result{ep_count}.pdf')
+        plt.savefig(f'result{ep_count}.pdf')
         plt.show()
         print(f'all rewards {agent.big_R}')
         break
