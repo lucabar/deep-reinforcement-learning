@@ -80,17 +80,23 @@ def draw_action(s, net, epsilon, greedy=True):
     else:
         return np.random.randint(0,nb_actions)
 
-def net_update(net, target_net, states, rewards, action, gamma):
+def net_update(net, target_net, states, rewards, gamma):
     states = make_tensor(states, list=True)
     target_output = target_net.predict(states, verbose=0)
     target_val = rewards + gamma *  np.max(target_output, axis=1)  # target value to compare to
+    
+    history = net.fit(states,target_val,batch_size=batch_size, verbose=0)
+    loss = history.history['loss'][0]
+    #print('loss:', loss)
 
+    '''
     with tf.GradientTape() as tape:
         q_values = net(states, training=True)
         loss = stable_loss(q_values[action],target_val[-1])
 
     gradients = tape.gradient(loss, net.trainable_variables)
     optimizer.apply_gradients(zip(gradients, net.trainable_variables))
+    '''
     return net, loss
 
 
@@ -98,6 +104,7 @@ q_net = init_Qnet()
 q_net.summary()
 target_q_net = q_net  # clone into target network
 optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
+q_net.compile(optimizer,loss=stable_loss)
 
 #q_net.summary()
 #q_net.predict(observation)
@@ -108,8 +115,8 @@ while True:
     #print(f"episode {ep_count} reward {ep_reward}")
     ep_count += 1
     ep_reward = 0
-    if ep_count % 50 == 0:
-        print(f"mean reward of last 50 {np.mean(big_R[-50:])}")
+    if ep_count % 10 == 0:
+        print(f"mean reward of last 10 {np.mean(big_R[-10:])}")
 
     for timestep in range(1,max_episode_length):
         # print(f"time {timestep} ({ep_count})")
@@ -142,7 +149,7 @@ while True:
             rewards = np.array(reward_buffer)[choice]
 
         if timestep % train_model_freq == 0:
-            q_net, loss = net_update(q_net, target_q_net, states=states, rewards=rewards, action=action, gamma=gamma)
+            q_net, loss = net_update(q_net, target_q_net, states=states, rewards=rewards, gamma=gamma)
         if timestep % update_target_freq == 0:
             target_q_net = q_net
             print('target update!')
@@ -155,15 +162,17 @@ while True:
 
         if term:
             #print('term')
+            #print(f'episode reward:{ep_reward}')
             big_R += [ep_reward]
             state, info = env.reset()
             break
 
         elif trunk:
             #print('trunk')
+            #print(f'episode reward:{ep_reward}')
             state, info = env.reset()
             break
 
-    if ep_reward > 100:
+    if ep_reward > 100 or ep_count > 100:
         print(f'much reward! ep_reward = {ep_reward}')
         break
