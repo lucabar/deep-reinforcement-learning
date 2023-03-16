@@ -14,6 +14,7 @@ buffer = np.array([])
 state_buffer = []
 term_buffer = []
 reward_buffer = []
+big_R = []
 counter = 0
 reward = 0
 done = False
@@ -30,13 +31,13 @@ state, info = env.reset()
 
 
 # hyperparameters
-epsilon = 0.01
+epsilon = 0.05
 output_activation = None
-learning_rate = 1e-3
+learning_rate = 0.05
 max_buffer_length = int(1e4)
 train_model_freq = 4
-update_target_freq = int(1e3)
-max_episode_length = int(1e4)
+update_target_freq = int(100)
+max_episode_length = int(1000)
 batch_size = 32
 gamma = 0.99
 
@@ -49,8 +50,8 @@ def stable_loss(target, pred):  # implement own loss on stable target
 
 def init_Qnet():
     model = tf.keras.Sequential([
-        keras.layers.Dense(10, activation='relu',kernel_initializer='glorot_uniform',input_shape=(4,)),
-        keras.layers.Dense(5, activation='relu',kernel_initializer='glorot_uniform'),
+        keras.layers.Dense(100, activation='relu',kernel_initializer='glorot_uniform',input_shape=(4,)),
+        keras.layers.Dense(50, activation='relu',kernel_initializer='glorot_uniform'),
         keras.layers.Dense(nb_actions, activation=output_activation)
     ])
     return model
@@ -103,9 +104,13 @@ optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
 
 while True:
     '''work in progress..'''
-    print(f"episode {ep_count} reward {ep_reward}")
+
+    #print(f"episode {ep_count} reward {ep_reward}")
     ep_count += 1
     ep_reward = 0
+    if ep_count % 50 == 0:
+        print(f"mean reward of last 50 {np.mean(big_R[-50:])}")
+
     for timestep in range(1,max_episode_length):
         # print(f"time {timestep} ({ep_count})")
 
@@ -117,7 +122,7 @@ while True:
             state_buffer.pop(d)
 
         # draw action
-        action = draw_action(state, q_net, epsilon = 0.9, greedy=False)
+        action = draw_action(state, q_net, epsilon=epsilon, greedy=False)
         next_state, r, term, trunk, info = env.step(action=action)
         #print(f'reward {r} at time {timestep} ({ep_count}), trunk {trunk}, term {term}')
 
@@ -140,23 +145,25 @@ while True:
             q_net, loss = net_update(q_net, target_q_net, states=states, rewards=rewards, action=action, gamma=gamma)
         if timestep % update_target_freq == 0:
             target_q_net = q_net
+            print('target update!')
         
         if timestep % 200 == 0:
             print(
                 "Training loss (for one batch) at step %d: %.4f"
                 % (timestep, float(loss))
             )
-        
 
-        done = term or trunk
         if term:
-            print('done because term')
+            #print('term')
+            big_R += [ep_reward]
             state, info = env.reset()
             break
+
         elif trunk:
-            print('done because trunk')
+            #print('trunk')
             state, info = env.reset()
             break
+
     if ep_reward > 100:
         print(f'much reward! ep_reward = {ep_reward}')
         break
