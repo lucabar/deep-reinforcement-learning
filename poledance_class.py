@@ -16,12 +16,11 @@ state_buffer = []
 term_buffer = []
 reward_buffer = []
 big_R = []
-counter = 0
-reward = 0
 done = False
 budget = 1e5
-ep_count = 0
+ep_count = 0  # counts finished episodes
 ep_reward = 0
+step_count = 0  # counts interactions with the environment
 
 
 
@@ -166,6 +165,7 @@ while True:
         print(f"mean reward of last 20 {np.mean(agent.big_R[-20:])}")
 
     for timestep in range(1,max_episode_length):
+        step_count += 1
         # draw action
         action = agent.draw_action(state)
         next_state, r, term, trunk, info = env.step(action=action)
@@ -180,9 +180,9 @@ while True:
         # sample buffer
         agent.draw_sample()
 
-        if timestep % train_model_freq == 0:
+        if step_count % train_model_freq == 0:
             loss = agent.update()
-        if timestep % update_target_freq == 0 and agent.target_active:
+        if step_count % update_target_freq == 0:
             agent.target_update()
             print('target update!')
         
@@ -193,13 +193,13 @@ while True:
             state, info = env.reset()
             break
 
-    if ep_count % 100 == 0:
+    if ep_count % 100 == 0 or ep_count < 20:
             print(
                 "Training loss at episode %d: %.4f"
                 % (ep_count, float(loss))
             )
 
-    if ep_count > 500:
+    if ep_count > 200:
         plt.scatter(np.arange(len(agent.big_R)), agent.big_R)
         plt.savefig(f'result{ep_count}.pdf')
         plt.show()
