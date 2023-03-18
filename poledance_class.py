@@ -204,7 +204,7 @@ while True:
                 % (ep_count, float(loss))
             )
 
-    if ep_count > 100:
+    if ep_count > 500:
         np.save('runs/all_ep_rewards', np.array(agent.big_R))
         np.save('runs/all_losses', np.array(losses))
         print(f'all rewards {agent.big_R}')
