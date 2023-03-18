@@ -1,9 +1,9 @@
 import numpy as np
-#from tf_agents import agents
 from tensorflow import keras
 import tensorflow as tf
 import gymnasium as gym
-import matplotlib.pyplot as plt
+import sys
+
 
 '''
 TO DO:
@@ -11,11 +11,6 @@ TO DO:
 '''
 # constants / initializations
 nb_actions = 2
-buffer = np.array([])
-state_buffer = []
-term_buffer = []
-reward_buffer = []
-big_R = []
 losses = []
 done = False
 budget = 1e5
@@ -23,6 +18,7 @@ ep_count = 0  # counts finished episodes
 ep_reward = 0
 step_count = 0  # counts interactions with the environment
 
+args = sys.argv[1:]
 
 
 # init game
@@ -53,6 +49,7 @@ def make_tensor(s, list: bool):
     return tf.expand_dims(s_tensor, 0)
 
 def stable_loss(target, pred):  # implement own loss on stable target
+    '''Squared loss'''
     squared_difference = tf.square(target - pred)
     return tf.reduce_mean(squared_difference, axis=-1)  # Note the `axis=-1`
 
@@ -64,19 +61,22 @@ def softmax(Q_vals, temp):
     return np.random.choice(2, None, p=probs)
 
 def e_greedy(Q_vals, epsilon):
+    ''' epsilon greedy policy '''
     if np.random.uniform(0.,1) > epsilon:
             return np.argmax(Q_vals)
     else:
         return np.random.randint(0,2)
 
 class DQN_Agent():
+    '''Class for the learning net'''
     def __init__(self, learning_rate: float, target_active: bool = True, replay: bool = True, 
-                 batch_size: int = 32, epsilon: float = 0, temp: float = 0):
+                 batch_size: int = 32, epsilon: float = 0, temp: float = 0, args = None):
         self.learning_rate = learning_rate
         self.epsilon = epsilon
         self.temp = temp
-        self.target_active = target_active
-        self.replay = replay
+        self.target_active = '--target_network' in args
+        self.replay = '--experience_replay' in args
+
         self.batch_size = batch_size
 
         self.state_buffer = []
@@ -94,14 +94,13 @@ class DQN_Agent():
         self.optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
         self.q_net.compile(self.optimizer,loss=stable_loss)
 
-    def draw_action(self, s, policy = 'e_greedy'):
+    def draw_action(self, s):
         '''
         input: 
-        - s: (4dim state) of environment
-        - net: policy approximator network
+        - s: (4dim) state of environment
         returns:
-        - greedy action to act upon
-        using pre-initialised -q_net-, predict an output. no training! '''
+        - int 0 or 1, action according to QNet and policy
+        no learning is happening here '''
         #print(f'type of s {type(s)}')
         s_tensor = make_tensor(s, False)
         Q_vals = self.q_net.predict(s_tensor, verbose=0)
@@ -116,6 +115,7 @@ class DQN_Agent():
 
 
     def draw_sample(self):
+        '''create random sample of length batch_size to be trained with'''
         if len(self.state_buffer) <= self.batch_size:
                 self.state_sample = np.array(self.state_buffer)
                 self.reward_sample = np.array(self.reward_buffer)
@@ -136,28 +136,31 @@ class DQN_Agent():
         target_val = self.reward_sample + gamma *  np.max(target_output, axis=1)  # target value to compare to
     
         history = self.q_net.fit(states,target_val,batch_size=batch_size, verbose=0)
-        loss = history.history['loss'][0] 
+        loss = history.history['loss'][0]
         
-        if self.target_active:
+        if not self.target_active:  # turn on/off target network 
             self.target_net = self.q_net
         return loss
 
     def target_update(self):
+        ''' update target network to current QNets weights'''
         self.target_net = self.q_net
         return self.target_net
     
     def buffer_clip(self, times):
+        '''reduce buffer length when exceeding memory'''
         for _ in range(times):
             d = np.random.randint(len(self.state_buffer))
             self.reward_buffer.pop(d)
             self.state_buffer.pop(d)
 
     def buffer_update(self, state, reward):
+        ''' append newly obtained environment state and reward to memory'''
         self.state_buffer.append(state)
         self.reward_buffer.append(reward)
 
 
-agent = DQN_Agent(learning_rate=learning_rate, epsilon=epsilon, batch_size=batch_size)
+agent = DQN_Agent(learning_rate=learning_rate, epsilon=epsilon, batch_size=batch_size, args=args)
 
 while True:
     ep_count += 1
@@ -183,7 +186,7 @@ while True:
 
         if step_count % train_model_freq == 0:
             loss = agent.update()
-        if step_count % update_target_freq == 0:
+        if step_count % update_target_freq == 0 and agent.target_active:
             agent.target_update()
             print('target update!')
         
@@ -195,14 +198,14 @@ while True:
             break
 
     losses += [loss]
-    if ep_count % 100 == 0 or ep_count < 20:
+    if ep_count % 100 == 0:
             print(
                 "Training loss at episode %d: %.4f"
                 % (ep_count, float(loss))
             )
 
     if ep_count > 100:
-        np.save('~/RL_A2/runs/all_ep_rewards', np.array(big_R))
-        np.save('~/RL_A2/runs/all_losses', np.array(losses))
+        np.save('runs/all_ep_rewards', np.array(agent.big_R))
+        np.save('runs/all_losses', np.array(losses))
         print(f'all rewards {agent.big_R}')
         break
