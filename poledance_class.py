@@ -16,6 +16,7 @@ state_buffer = []
 term_buffer = []
 reward_buffer = []
 big_R = []
+losses = []
 done = False
 budget = 1e5
 ep_count = 0  # counts finished episodes
@@ -36,7 +37,7 @@ epsilon = 0.1
 temp = 1.0
 max_buffer_length = int(1e4)
 train_model_freq = 4
-update_target_freq = int(100)  # set this to 4 for target to vanish
+update_target_freq = int(10000)  # set this to 4 for target to vanish
 max_episode_length = int(1000)
 batch_size = 32
 gamma = 0.99
@@ -193,15 +194,15 @@ while True:
             state, info = env.reset()
             break
 
+    losses += [loss]
     if ep_count % 100 == 0 or ep_count < 20:
             print(
                 "Training loss at episode %d: %.4f"
                 % (ep_count, float(loss))
             )
 
-    if ep_count > 200:
-        plt.scatter(np.arange(len(agent.big_R)), agent.big_R)
-        plt.savefig(f'result{ep_count}.pdf')
-        plt.show()
+    if ep_count > 100:
+        np.save('~/RL_A2/runs/all_ep_rewards', np.array(big_R))
+        np.save('~/RL_A2/runs/all_losses', np.array(losses))
         print(f'all rewards {agent.big_R}')
         break

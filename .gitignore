@@ -2,4 +2,4 @@
 *.png
 *.DS_Store
 *.vs_code
-
+*.npy
