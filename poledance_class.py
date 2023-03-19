@@ -19,6 +19,11 @@ ep_reward = 0
 step_count = 0  # counts interactions with the environment
 
 args = sys.argv[1:]
+# while still debugging, always keep target network and exp replay on
+debug = True
+if debug:
+    print('DEBUG')
+    args = ['--target_network','--experience_replay']
 
 
 # init game
@@ -33,7 +38,7 @@ epsilon = 0.1
 temp = 1.0
 max_buffer_length = int(1e4)
 train_model_freq = 4
-update_target_freq = int(10000)  # set this to 4 for target to vanish
+update_target_freq = int(1000)  # must not be too high or else it will never be updated
 max_episode_length = int(1000)
 batch_size = 32
 gamma = 0.99
@@ -67,6 +72,8 @@ def e_greedy(Q_vals, epsilon):
     else:
         return np.random.randint(0,2)
 
+#######
+
 class DQN_Agent():
     '''Class for the learning net'''
     def __init__(self, learning_rate: float, target_active: bool = True, replay: bool = True, 
@@ -74,8 +81,14 @@ class DQN_Agent():
         self.learning_rate = learning_rate
         self.epsilon = epsilon
         self.temp = temp
+
         self.target_active = '--target_network' in args
         self.replay = '--experience_replay' in args
+
+        if self.target_active:
+            print('Activating target network...')
+        if self.replay:
+            print('Activating experience replay...')
 
         self.batch_size = batch_size
 
@@ -140,6 +153,7 @@ class DQN_Agent():
         
         if not self.target_active:  # turn on/off target network 
             self.target_net = self.q_net
+            print('target equals qnet')
         return loss
 
     def target_update(self):
@@ -167,8 +181,10 @@ while True:
     ep_reward = 0
     if ep_count % 20 == 0:
         print(f"mean reward of last 20 {np.mean(agent.big_R[-20:])}")
+    timestep = 0
 
-    for timestep in range(1,max_episode_length):
+    while timestep < max_episode_length:
+        timestep += 1
         step_count += 1
         # draw action
         action = agent.draw_action(state)
@@ -188,7 +204,7 @@ while True:
             loss = agent.update()
         if step_count % update_target_freq == 0 and agent.target_active:
             agent.target_update()
-            print('target update!')
+            print('target update!')  # important to see, how often target is updated
         
 
 
@@ -196,15 +212,10 @@ while True:
             agent.big_R += [ep_reward]
             state, info = env.reset()
             break
+    # end of for loop
+    losses += [loss]  # append episode's last loss to export later
 
-    losses += [loss]
-    if ep_count % 100 == 0:
-            print(
-                "Training loss at episode %d: %.4f"
-                % (ep_count, float(loss))
-            )
-
-    if ep_count > 500:
+    if ep_count >= 200:
         np.save('runs/all_ep_rewards', np.array(agent.big_R))
         np.save('runs/all_losses', np.array(losses))
         print(f'all rewards {agent.big_R}')
