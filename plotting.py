@@ -14,7 +14,8 @@ def simple_plot(y_vals, x_vals = None, file = None):
         plt.savefig(f'runs/{file}.pdf')
     plt.show()
     return
-# print(len(rewards))
+
+print(len(rewards))
 rewards = np.mean(rewards.reshape(-1, 10), axis=1)
 simple_plot(losses, file='Loss')
 simple_plot(rewards, file='Reward')
