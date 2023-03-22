@@ -4,10 +4,7 @@ import tensorflow as tf
 import gymnasium as gym
 import sys
 
-import keras_tuner
-
 from Helper import make_tensor, stable_loss, softmax, e_greedy
-
 
 # constants / initializations
 nb_actions = 2
@@ -30,66 +27,19 @@ if debug:
 env = gym.make("CartPole-v1")  # , render_mode='human'
 state, info = env.reset()
 
-keras_tuner.HyperParameters.Choice('learning_rate', [0.0001, 0.001, 0.01])
-keras_tuner.HyperParameters.Choice('update_target_freq', [100, 500, 1000])
-keras_tuner.HyperParameters.Choice('batch_size', [32, 64, 128])
-keras_tuner.HyperParameters.Choice('optimizer', ['adam', 'rmsprop'])
-
-
-tuner = keras_tuner.GridSearch(
-    hypermodel=DQN_Agent,
-
-)
 
 # hyperparameters
-# learning_rate = [0.0001, 0.001, 0.01]
 learning_rate = 0.01
 epsilon = 0.1
 temp = 1.0
 max_buffer_length = int(1e4)
 train_model_freq = 4
 # must not be too high or else it will never be updated
-# update_target_freq = [100, 500, 1000]
 update_target_freq = int(1000)
 max_episode_length = int(1000)
-# batch_size =  [32, 64, 128]
 batch_size = 32
 gamma = 0.99
 output_activation = None
-optimizer = ['adam', 'rmsprop']
-
-
-class Q_Network():
-
-    def __init__(self, learning_rate, optimizer, layers=None):
-        self.learning_rate = learning_rate
-        self.optimizer = optimizer
-        self.output_activation = output_activation
-
-        self.model = tf.keras.Sequential([
-            keras.layers.Dense(
-                20, activation='relu', kernel_initializer='he_uniform', input_shape=(4,)),
-            keras.layers.Dense(10, activation='relu',
-                               kernel_initializer='he_uniform'),
-            keras.layers.Dense(nb_actions, activation='linear')
-        ])
-
-        optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
-        self.model.compile(optimizer, loss=stable_loss)
-
-    def update(self, states, target_output):
-        '''learning of behavioural network'''
-        rewards = np.ones(len(states))  # all rewards are 1
-        states = make_tensor(states, list=True)
-        # target value to compare to
-        target_val = rewards + gamma * np.max(target_output, axis=1)
-
-        self.model.fit(
-            states, target_val, batch_size=batch_size, verbose=0)
-
-    def copy_weights(self, target_net):
-        '''copy weights from target network to q network'''
-        self.model.set_weights(target_net.get_weights())
 
 
 class DQN_Agent():
@@ -115,7 +65,20 @@ class DQN_Agent():
         self.reward_buffer = []
         self.big_R = []
 
-    def draw_action(self, s, q_network):
+        self.q_net = tf.keras.Sequential([
+            keras.layers.Dense(
+                20, activation='relu', kernel_initializer='glorot_uniform', input_shape=(4,)),
+            keras.layers.Dense(10, activation='relu',
+                               kernel_initializer='glorot_uniform'),
+            keras.layers.Dense(nb_actions, activation=output_activation)
+        ])
+
+        self.q_net.summary()
+        self.target_net = self.q_net
+        self.optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
+        self.q_net.compile(self.optimizer, loss=stable_loss)
+
+    def draw_action(self, s):
         '''
         input: 
         - s: (4dim) state of environment
@@ -124,7 +87,7 @@ class DQN_Agent():
         no learning is happening here '''
         # print(f'type of s {type(s)}')
         s_tensor = make_tensor(s, False)
-        Q_vals = q_network.predict(s_tensor, verbose=0)
+        Q_vals = self.q_net.predict(s_tensor, verbose=0)
 
         if self.epsilon:
             return e_greedy(Q_vals, epsilon=self.epsilon)
@@ -149,6 +112,27 @@ class DQN_Agent():
             self.state_sample = self.state_buffer[-self.batch_size:]
             self.reward_sample = self.reward_buffer[-self.batch_size:]
 
+    def update(self):
+        '''learning of behavioural network'''
+        states = make_tensor(self.state_sample, list=True)
+        target_output = self.target_net.predict(states, verbose=0)
+        target_val = self.reward_sample + gamma * \
+            np.max(target_output, axis=1)  # target value to compare to
+
+        history = self.q_net.fit(
+            states, target_val, batch_size=batch_size, verbose=0)
+        loss = history.history['loss'][0]
+
+        if not self.target_active:  # turn on/off target network
+            self.target_net = self.q_net
+            print('target equals qnet')
+        return loss
+
+    def target_update(self):
+        ''' update target network to current QNets weights'''
+        self.target_net = self.q_net
+        return self.target_net
+
     def buffer_clip(self, times):
         '''reduce buffer length when exceeding memory'''
         for _ in range(times):
@@ -163,9 +147,6 @@ class DQN_Agent():
 
 
 def q_learning(n_timesteps, learning_rate, gamma, policy='egreedy', epsilon=None, temp=None, plot=True):
-
-    q_network = Q_Network(learning_rate, optimizer)
-    target_network = Q_Network(learning_rate, optimizer)
 
     agent = DQN_Agent(learning_rate=learning_rate,
                       epsilon=epsilon, batch_size=batch_size, args=args)
@@ -185,7 +166,7 @@ def q_learning(n_timesteps, learning_rate, gamma, policy='egreedy', epsilon=None
             timestep += 1
             step_count += 1
 
-            action = agent.draw_action(state, q_network.model)
+            action = agent.draw_action(state)
             next_state, r, term, trunk, info = env.step(action=action)
             agent.buffer_update(state, r)
             ep_reward += r
@@ -199,14 +180,10 @@ def q_learning(n_timesteps, learning_rate, gamma, policy='egreedy', epsilon=None
             agent.draw_sample()
 
             if step_count % train_model_freq == 0:
-                #  TODO
-                states = DQN_Agent.states_sample
-                target_output = target_network.predict(states)
-                q_network.update(states, target_output)
+                loss = agent.update()
 
             if step_count % update_target_freq == 0 and agent.target_active:
-                target_network.model.set_weights(q_network.model.get_weights())
-
+                agent.target_update()
                 # important to see, how often target is updated
                 print('target update!')
 
