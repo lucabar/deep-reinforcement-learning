@@ -1,178 +1,210 @@
 import numpy as np
-#from tf_agents import agents
-from tensorflow import keras
 import tensorflow as tf
 import gymnasium as gym
+import sys
 
-'''
-TO DO:
-    - implement comand line arguments (no) experience_replay/target_network
-'''
-# constants / initializations
-nb_actions = 2
-buffer = np.array([])
-state_buffer = []
-term_buffer = []
-reward_buffer = []
-big_R = []
-counter = 0
-reward = 0
-done = False
-budget = 1e5
-ep_count = 0
-ep_reward = 0
+from Helper import make_tensor, stable_loss, softmax, e_greedy
 
 
+args = sys.argv[1:]
 
-# init game
-env = gym.make("CartPole-v1")  # , render_mode='human'
-state, info = env.reset()
-# print(observation)  # 4 state values define one state
+# while still debugging, always keep target network and exp replay on
+debug = True
 
+if debug:
+    print('DEBUG')
+    tn_active = True
+    er_active = True
 
-# hyperparameters
-epsilon = 0.1
-output_activation = None
-learning_rate = 0.1
-max_buffer_length = int(1e4)
-train_model_freq = 4
-update_target_freq = int(100)
-max_episode_length = int(1000)
-batch_size = 32
-gamma = 0.99
-
-#loss_func = keras.losses.Huber()
-
-
-def stable_loss(target, pred):  # implement own loss on stable target
-    squared_difference = tf.square(target - pred)
-    return tf.reduce_mean(squared_difference, axis=-1)  # Note the `axis=-1`
-
-def init_Qnet():
-    model = tf.keras.Sequential([
-        keras.layers.Dense(100, activation='relu',kernel_initializer='glorot_uniform',input_shape=(4,)),
-        keras.layers.Dense(50, activation='relu',kernel_initializer='glorot_uniform'),
-        keras.layers.Dense(nb_actions, activation=output_activation)
-    ])
-    return model
-
-def make_tensor(s, list: bool):
-    '''in order to be used in net.predict() method'''
-    s_tensor = tf.convert_to_tensor(s)
-    if list:
-        return s_tensor
-    return tf.expand_dims(s_tensor, 0)
-
-def draw_action(s, net, epsilon, greedy=True):
-    '''
-    input: 
-    - s: (4dim state) of environment
-    - net: policy approximator network
-    returns:
-    - greedy action to act upon
-    using pre-initialised -q_net-, predict an output. no training! '''
-    #print(f'type of s {type(s)}')
-    s_tensor = make_tensor(s, False)
-    action_probs = net.predict(s_tensor, verbose=0)
-
-    if greedy or np.random.uniform(0.,1) > epsilon:
-        return np.argmax(action_probs)
-    else:
-        return np.random.randint(0,nb_actions)
-
-def net_update(net, target_net, states, rewards, gamma):
-    states = make_tensor(states, list=True)
-    target_output = target_net.predict(states, verbose=0)
-    target_val = rewards + gamma *  np.max(target_output, axis=1)  # target value to compare to
-    
-    history = net.fit(states,target_val,batch_size=batch_size, verbose=0)
-    loss = history.history['loss'][0]
-    #print('loss:', loss)
-
-    '''
-    with tf.GradientTape() as tape:
-        q_values = net(states, training=True)
-        loss = stable_loss(q_values[action],target_val[-1])
-
-    gradients = tape.gradient(loss, net.trainable_variables)
-    optimizer.apply_gradients(zip(gradients, net.trainable_variables))
-    '''
-    return net, loss
+# handling of command line arguments
+for arg in args:
+    if arg == '--target_network':
+        tn_active = True
+    elif arg == '--experience_replay':
+        er_active = True
+    try:
+        max_eps = int(arg)
+        print('max ep count:', max_eps)
+    except:
+        continue
 
 
-q_net = init_Qnet()
-q_net.summary()
-target_q_net = q_net  # clone into target network
-optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
-q_net.compile(optimizer,loss=stable_loss)
+class Q_Network():
+    '''General deep Q Network'''
 
-#q_net.summary()
-#q_net.predict(observation)
+    def __init__(self, learning_rate: float, optimizer: str, batch_size: int = 32, layers: list = [20,10] ):
+        self.learning_rate = learning_rate
+        self.optimizer = optimizer
+        self.batch_size = batch_size
 
-while True:
-    '''work in progress..'''
+        self.gamma = 0.99
 
-    #print(f"episode {ep_count} reward {ep_reward}")
-    ep_count += 1
-    ep_reward = 0
-    if ep_count % 10 == 0:
-        print(f"mean reward of last 10 {np.mean(big_R[-10:])}")
+        self.model = tf.keras.Sequential([
+            tf.keras.layers.Dense(
+                20, activation='relu', kernel_initializer='he_uniform', input_shape=(4,)),
+            tf.keras.layers.Dense(10, activation='relu',
+                               kernel_initializer='he_uniform'),
+            tf.keras.layers.Dense(2, activation='linear')
+        ])
+        if optimizer == 'adam':
+            optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+        elif optimizer == 'rmsprop':
+            optimizer = tf.keras.optimizers.RMSprop(learning_rate=learning_rate)
+        self.model.compile(optimizer, loss=stable_loss)
 
-    for timestep in range(1,max_episode_length):
-        # print(f"time {timestep} ({ep_count})")
+    def update(self, states, target_output):
+        '''learning of network'''
+        rewards = np.ones(len(states))  # all rewards are 1
+        states = make_tensor(states, list=True)
+        # target value to compare to
+        target_val = rewards + self.gamma * np.max(target_output, axis=1)
 
-        # remove random step when buffer too long
-        if len(state_buffer) > max_buffer_length:
-            d = np.random.randint(len(state_buffer))
-            term_buffer.pop(d)
-            reward_buffer.pop(d)
-            state_buffer.pop(d)
+        self.model.fit(
+            states, target_val, batch_size=self.batch_size, verbose=0)
 
-        # draw action
-        action = draw_action(state, q_net, epsilon=epsilon, greedy=False)
-        next_state, r, term, trunk, info = env.step(action=action)
-        #print(f'reward {r} at time {timestep} ({ep_count}), trunk {trunk}, term {term}')
+    def get_model(self):
+        return self.model
 
-        ep_reward += r
-        state_buffer.append(state)
-        term_buffer.append([term,trunk])
-        reward_buffer.append(r)
-        state = next_state
 
-        # sample buffer
-        if len(state_buffer) <= batch_size:
-            states = np.array(state_buffer)
-            rewards = reward_buffer
+class DQN_Agent():
+    '''Class for the learning net'''
+
+    def __init__(self, batch_size: int = 32, replay: bool = True, epsilon: float = 0, temp: float = 0, max_buffer: int = int(1e4) ):
+        self.epsilon = epsilon
+        self.temp = temp
+        self.batch_size = batch_size
+        self.max_buffer = max_buffer
+        self.replay = replay
+
+        self.state_buffer = []
+        self.state_sample = []  # init not really needed, just for overview of attributes
+
+    def draw_action(self, s, q_network: Q_Network):
+        '''
+        input: 
+        - s: (4dim) state of environment
+        returns:
+        - int 0 or 1, action according to QNet and policy
+        no learning is happening here '''
+
+        s_tensor = make_tensor(s, False)
+        Q_vals = q_network.model.predict(s_tensor, verbose=0)  # outputs two Q-values
+
+        if self.epsilon:
+            return e_greedy(Q_vals, epsilon=self.epsilon)
+        elif self.temp:
+            return softmax(Q_vals, temp=self.temp)
         else:
-            choice = np.random.choice(np.arange(len(state_buffer)), size = (batch_size,), replace=False)
-            states = np.array(state_buffer)[choice]
-            rewards = np.array(reward_buffer)[choice]
+            print('No policy given! Default to greedy!')
+            return np.argmax(Q_vals)
 
-        if timestep % train_model_freq == 0:
-            q_net, loss = net_update(q_net, target_q_net, states=states, rewards=rewards, gamma=gamma)
-        if timestep % update_target_freq == 0:
-            target_q_net = q_net
-            print('target update!')
-        
-        if timestep % 200 == 0:
-            print(
-                "Training loss (for one batch) at step %d: %.4f"
-                % (timestep, float(loss))
-            )
+    def buffer_clip(self, times):
+        '''reduce buffer length when exceeding memory'''
+        for _ in range(times):
+            d = np.random.randint(len(self.state_buffer))
+            self.state_buffer.pop(d)
 
-        if term:
-            #print('term')
-            #print(f'episode reward:{ep_reward}')
-            big_R += [ep_reward]
-            state, info = env.reset()
+    def draw_sample(self):
+        '''create (random) sample of length batch_size to be trained with'''
+        if len(self.state_buffer) <= self.batch_size:
+            return np.array(self.state_buffer)
+        if self.replay:
+            choice = np.random.choice(np.arange(len(self.state_buffer)), size=(self.batch_size,))  # add replace=False ?
+            return np.array(self.state_buffer)[choice]
+        else:  # w/out experience we still want to batch the last 32 samples?
+            return self.state_buffer[-self.batch_size:]
+
+    def buffer_update(self, state):
+            ''' append newly obtained environment state to memory'''
+            self.state_buffer.append(state)
+
+            if len(self.state_buffer) > self.max_buffer:
+                self.buffer_clip(1)
+
+            self.state_sample = self.draw_sample()  # after having updated the buffer, update/create samples to learn from
+
+
+def q_learning(max_eps: int, budget: int, learning_rate: float = 0.01, epsilon: float = 0.01, temp: float = None, optimizer: str = 'rmsprop',
+               batch_size: int = 32, tn_active: bool =tn_active, er_active: bool=er_active, run: str = '1', save: bool = False):
+    if tn_active:
+        print('Activating target network...')
+    if er_active:
+        print('Activating experience replay...')
+
+    max_episode_length = 500  # CartPole limits naturally at 475
+    train_model_freq = 4
+    update_target_freq = int(1000)
+
+
+    # init game
+    env = gym.make("CartPole-v1")  # , render_mode='human'
+
+    q_network = Q_Network(learning_rate, optimizer, batch_size=batch_size)
+    target_network = Q_Network(learning_rate, optimizer, batch_size=batch_size)
+    target_network.model.set_weights(q_network.model.get_weights())
+
+    agent = DQN_Agent(epsilon=epsilon, batch_size=batch_size)
+    total_rewards = []  # collects cumulative reward for each episode
+    step_count = 0  # counts interactions with the environment
+    ep_count = 0  # counts terminated/truncated episodes
+
+
+    while step_count < budget:  # to limit environment interaction
+        ep_count += 1
+        ep_reward = 0
+        timestep = 0
+
+        if ep_count % 20 == 0 and debug:
+            print(f"mean reward of last 20 {np.mean(total_rewards[-20:])}")
+
+        state, info = env.reset()
+
+        while timestep < max_episode_length:
+            timestep += 1  # counts episode length
+            step_count += 1  # counts overall interactions with env
+
+            action = agent.draw_action(state, q_network)
+            next_state, r, term, trunk, info = env.step(action=action)
+            agent.buffer_update(state)
+            ep_reward += r
+
+            state = next_state
+
+            if step_count % train_model_freq == 0:
+                # training Q net
+                states = agent.state_sample
+                target_output = target_network.model.predict(states, verbose=0)
+                q_network.update(states, target_output)
+
+                if not tn_active:
+                    # keeping target same as Q net
+                    target_network.model.set_weights(q_network.model.get_weights())
+
+
+            if step_count % update_target_freq == 0 and tn_active:
+                # only update target every n-th step
+                target_network.model.set_weights(q_network.model.get_weights())
+                # important to see, how often target is updated
+                if debug:
+                    print('target update!')
+
+            if term or trunk:
+                total_rewards += [ep_reward]
+                state, info = env.reset()
+                break
+
+        if not term and not trunk:  # equivalent to saying timestep >= max_episode_length
+            total_rewards += [ep_reward]
+
+        if ep_count % 100 == 0 and save:
+            np.save(f'runs/rewards{run}', np.array(total_rewards))
+        if ep_count >= max_eps:
             break
 
-        elif trunk:
-            #print('trunk')
-            #print(f'episode reward:{ep_reward}')
-            state, info = env.reset()
-            break
+    return total_rewards
 
-    if ep_reward > 100 or ep_count > 100:
-        print(f'much reward! ep_reward = {ep_reward}')
-        break
+if __name__ == "__main__":
+    budget = 100000
+    max_eps = 200
+
+    rewards = q_learning(max_eps, budget=budget, learning_rate=0.001, tn_active=tn_active, er_active=er_active, save=True)

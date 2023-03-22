@@ -3,3 +3,4 @@
 *.DS_Store
 *.vs_code
 *.npy
+__pycache__

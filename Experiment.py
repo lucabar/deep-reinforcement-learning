@@ -7,6 +7,11 @@ import time
 from assignment_2 import q_learning
 from Helper import LearningCurvePlot, smooth
 
+# hyperparameters
+# learning_rate = [0.0001, 0.001, 0.01]
+# batch_size =  [32, 64, 128]
+# update_target_freq = [100, 500, 1000]
+
 
 def average_over_repetitions(backup, n_repetitions, n_timesteps, max_episode_length, learning_rate, gamma, policy='egreedy',
                              epsilon=None, temp=None, smoothing_window=51, plot=False, n=5):
