@@ -9,14 +9,14 @@ from Helper import LearningCurvePlot, smooth
 
 
 def average_over_repetitions(eps, n_repetitions, learning_rate,
-                             epsilon=None, temp=None, smoothing_window=5, batch_size=32, update_target=100):
+                             epsilon=None, temp=None, smoothing_window=5, batch_size=32, update_target_freq=100):
 
     reward_results = np.empty([n_repetitions, eps])  # Result array
     now = time.time()
 
     for rep in range(n_repetitions):  # Loop over repetitions
         print(f'Rep. number {rep+1}')
-        rewards = q_learning(eps, learning_rate, epsilon=epsilon, temp=temp, batch_size=batch_size, update_target_freq=update_target)
+        rewards = q_learning(eps, learning_rate, epsilon=epsilon, temp=temp, batch_size=batch_size, update_target_freq=update_target_freq)
         reward_results[rep] = rewards
 
     print('Running one setting takes {} minutes'.format((time.time()-now)/60))
