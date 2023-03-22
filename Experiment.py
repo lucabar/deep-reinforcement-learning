@@ -43,8 +43,8 @@ def experiment():
     batch_size = 32
 
     # lists of hyperparameters
-    learning_rates = [0.001]
-    batch_sizes =  [32, 64, 128]
+    learning_rates = [0.00025, 0.0025]
+    batch_sizes =  [32]
     test_nb = 0
 
     update_target_freqs = [100, 500, 1000]
@@ -54,8 +54,10 @@ def experiment():
         for batch_size in batch_sizes:
             for learning_rate in learning_rates:
                 test_nb += 1
+                print(f"-----Testing no.{test_nb}, l{learning_rate}, b{batch_size}, u{update_target_freq}-----")
+
                 Plot = LearningCurvePlot(
-                    title='First experiments; testing...')
+                    title=f'Learning rate: {learning_rate}, batch size: {batch_size}, target update: {update_target_freq}')
 
                 learning_curve = average_over_repetitions(100, n_repetitions, learning_rate, epsilon=epsilon, batch_size=batch_size, update_target_freq=update_target_freq)
                 stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))

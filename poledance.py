@@ -215,6 +215,7 @@ def q_learning(max_eps: int, learning_rate: float = 0.01, epsilon: float = None,
         if ep_count >= max_eps:
             break
 
+    env.close()
     return total_rewards
 
 if __name__ == "__main__":
