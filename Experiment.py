@@ -30,7 +30,7 @@ def average_over_repetitions(eps, n_repetitions, learning_rate,
 def experiment():
     # Settings
     # Experiment
-    n_repetitions = 10
+    n_repetitions = 5
 
     # Parameters we will vary in the experiments, set them to some initial values:
     # Exploration
@@ -64,7 +64,7 @@ def experiment():
                 Plot.add_curve(
                     learning_curve, label=r'$\epsilon$-greedy, $\epsilon $ = {}'.format(epsilon))
                 Plot.save(f'runs/{stamp}_l{learning_rate}_e{epsilon}_b{batch_size}_u{update_target_freq}.pdf')
-                print(f"-----Test {test_nb} done!-----")
+                print(f"-----Test {test_nb}, l{learning_rate}, b{batch_size}, u{update_target_freq} done!-----")
 
 
 if __name__ == '__main__':

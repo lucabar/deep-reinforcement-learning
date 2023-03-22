@@ -201,9 +201,6 @@ def q_learning(max_eps: int, learning_rate: float = 0.01, epsilon: float = None,
             if step_count % update_target_freq == 0 and tn_active:
                 # only update target every n-th step
                 target_network.model.set_weights(q_network.model.get_weights())
-                # important to see, how often target is updated
-                if debug:
-                    print('target update!')
 
             if term or trunk:
                 total_rewards += [ep_reward]
