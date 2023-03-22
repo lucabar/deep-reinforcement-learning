@@ -128,6 +128,21 @@ def q_learning(max_eps: int, learning_rate: float = 0.01, epsilon: float = None,
                optimizer: str = 'rmsprop', batch_size: int = 32, update_target_freq: int = 100,
                tn_active: bool =tn_active, er_active: bool=er_active, 
                budget: int = 10000, run: str = '1', save: bool = False):
+    '''
+    Method that trains a DQN for a set amount of episodes, returns array of cumulative rewards of each episode (length of episode)
+    - max_eps: the number of episodes to play
+    - learning_rate: learning rate
+    - epsilon: (annealing) epsilon-greedy parameter
+    - temp: temperature of Boltzmann policy
+    - optimizer: optimizer architecture of the Q Network
+    - batch_size: amount of (random) samples used to train the Q Network
+    - update_target_freq: amount of steps that pass between each update of target network (when active)
+    - tn_active, er_active: bool of whether to include target network or experience replay
+    - budget: max amount of steps we allow a session (many episodes) to take
+    - run: string for identification of test (not used)
+    - save: exporting of intermediate data (not used)
+    '''
+
     if tn_active:
         print()
         print('Activating target network...')
