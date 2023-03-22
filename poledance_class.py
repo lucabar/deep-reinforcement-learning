@@ -160,7 +160,7 @@ class DQN_Agent():
         states = make_tensor(self.state_sample, list=True)
         target_output = self.target_net.predict(states, verbose=0)
         target_val = self.reward_sample + gamma *  np.max(target_output, axis=1)  # target value to compare to
-        ''' THIS DEFINITELY STILL NEEDS WORK. As soon as the target update is done, it stops learning (I think)'''
+
         history = self.q_net.fit(states,target_val,batch_size=batch_size, verbose=0)
         loss = history.history['loss'][0]
         
@@ -186,50 +186,52 @@ class DQN_Agent():
         self.state_buffer.append(state)
         self.reward_buffer.append(reward)
 
+def q_learning(learning_rate=learning_rate, epsilon=epsilon,batch_size=batch_size, args=args):
+    agent = DQN_Agent(learning_rate=learning_rate, epsilon=epsilon, batch_size=batch_size, args=args)
 
-agent = DQN_Agent(learning_rate=learning_rate, epsilon=epsilon, batch_size=batch_size, args=args)
+    while True:
+        ep_count += 1
+        ep_reward = 0
+        if ep_count % 20 == 0:
+            print(f"mean reward of last 20 {np.mean(agent.big_R[-20:])}")
+        timestep = 0
 
-while True:
-    ep_count += 1
-    ep_reward = 0
-    if ep_count % 20 == 0:
-        print(f"mean reward of last 20 {np.mean(agent.big_R[-20:])}")
-    timestep = 0
+        while timestep < max_episode_length:
+            timestep += 1
+            step_count += 1
+            # draw action
+            action = agent.draw_action(state)
+            next_state, r, term, trunk, info = env.step(action=action)
+            agent.buffer_update(state, r)
+            ep_reward += r
 
-    while timestep < max_episode_length:
-        timestep += 1
-        step_count += 1
-        # draw action
-        action = agent.draw_action(state)
-        next_state, r, term, trunk, info = env.step(action=action)
-        agent.buffer_update(state, r)
-        ep_reward += r
+            if len(agent.state_buffer) > max_buffer_length:
+                agent.buffer_clip(1)
 
-        if len(agent.state_buffer) > max_buffer_length:
-            agent.buffer_clip(1)
+            state = next_state
 
-        state = next_state
+            # sample buffer
+            agent.draw_sample()
 
-        # sample buffer
-        agent.draw_sample()
+            if step_count % train_model_freq == 0 and train:
+                loss = agent.update()
+                losses += [loss]
+            if step_count % update_target_freq == 0 and agent.target_active and train:
+                agent.target_update()
+                print('target update!')  # important to see, how often target is updated
 
-        if step_count % train_model_freq == 0 and train:
-            loss = agent.update()
-            losses += [loss]
-        if step_count % update_target_freq == 0 and agent.target_active and train:
-            agent.target_update()
-            print('target update!')  # important to see, how often target is updated
+            if term or trunk:
+                agent.big_R += [ep_reward]
+                state, info = env.reset()
+                break
+        # end of for loop
 
-        if term or trunk:
-            agent.big_R += [ep_reward]
-            state, info = env.reset()
+        # append episode's last loss to export later
+        if ep_count % 100 == 0:
+            np.save(f'runs/all_ep_rewards', np.array(agent.big_R))
+            np.save(f'runs/all_losses', np.array(losses))
+
+        if ep_count >= max_ep_count:
             break
-    # end of for loop
 
-      # append episode's last loss to export later
-    if ep_count % 100 == 0:
-        np.save(f'runs/all_ep_rewards', np.array(agent.big_R))
-        np.save(f'runs/all_losses', np.array(losses))
-
-    if ep_count >= max_ep_count:
-        break
+    return agent.big_R
