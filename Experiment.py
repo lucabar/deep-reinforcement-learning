@@ -45,13 +45,15 @@ def experiment():
     # lists of hyperparameters
     learning_rates = [0.001]
     batch_sizes =  [32, 64, 128]
-    
+    test_nb = 0
+
     update_target_freqs = [100, 500, 1000]
     alternatives = [(True,True),(False,False),(True,False),(False,True)]  # tests with various target_network or experience replay
 
     for update_target_freq in update_target_freqs:
         for batch_size in batch_sizes:
             for learning_rate in learning_rates:
+                test_nb += 1
                 Plot = LearningCurvePlot(
                     title='First experiments; testing...')
 
@@ -62,6 +64,7 @@ def experiment():
                 Plot.add_curve(
                     learning_curve, label=r'$\epsilon$-greedy, $\epsilon $ = {}'.format(epsilon))
                 Plot.save(f'{stamp}_l{learning_rate}_e{epsilon}_b{batch_size}_u{update_target_freq}.pdf')
+                print(f"-----Test {test_nb} done!-----")
 
 
 if __name__ == '__main__':
