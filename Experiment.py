@@ -39,20 +39,25 @@ def experiment():
     # Back-up & update
     learning_rate = 0.001
     # hyperparameters
-    # learning_rate = [0.0001, 0.001, 0.01]
-    # batch_size =  [32, 64, 128]
-    # update_target_freq = [100, 500, 1000]
+    learning_rates = [0.00025, 0.001, 0.0025]
+    batch_sizes =  [32, 64, 128]
+    batch_size = 32
+    # update_target_freqs = [100, 500, 1000]
+    update_target_freq = 100
+    alternatives = [(True,True),(False,False),(True,False),(False,True)]  # tests with various target_network or experience replay
 
-    Plot = LearningCurvePlot(
-        title='First experiments; testing...')
+    for batch_size in batch_sizes:
+        for learning_rate in learning_rates:
+            Plot = LearningCurvePlot(
+                title='First experiments; testing...')
 
-    learning_curve = average_over_repetitions(100, n_repetitions, learning_rate, epsilon=epsilon)
-    stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
+            learning_curve = average_over_repetitions(100, n_repetitions, learning_rate, epsilon=epsilon)
+            stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
 
-    np.save(f'runs/tmp_curve', learning_curve)
-    Plot.add_curve(
-        learning_curve, label=r'$\epsilon$-greedy, $\epsilon $ = {}'.format(epsilon))
-    Plot.save(f'q-learning{stamp}.png')
+            np.save(f'runs/tmp_curve', learning_curve)
+            Plot.add_curve(
+                learning_curve, label=r'$\epsilon$-greedy, $\epsilon $ = {}'.format(epsilon))
+            Plot.save(f'{stamp}_l{learning_rate}_e{epsilon}_b{batch_size}_u{update_target_freq}.pdf')
 
 
 if __name__ == '__main__':

@@ -124,7 +124,7 @@ class DQN_Agent():
             self.state_sample = self.draw_sample()  # after having updated the buffer, update/create samples to learn from
 
 
-def q_learning(max_eps: int, learning_rate: float = 0.01, epsilon: float = 0.01, temp: float = None, 
+def q_learning(max_eps: int, learning_rate: float = 0.01, epsilon: float = None, temp: float = None, 
                optimizer: str = 'rmsprop', batch_size: int = 32,
                tn_active: bool =tn_active, er_active: bool=er_active, 
                budget: int = 10000, run: str = '1', save: bool = False):
