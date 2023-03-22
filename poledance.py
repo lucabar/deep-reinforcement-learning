@@ -125,7 +125,7 @@ class DQN_Agent():
 
 
 def q_learning(max_eps: int, learning_rate: float = 0.01, epsilon: float = None, temp: float = None, 
-               optimizer: str = 'rmsprop', batch_size: int = 32,
+               optimizer: str = 'rmsprop', batch_size: int = 32, update_target_freq: int = 100,
                tn_active: bool =tn_active, er_active: bool=er_active, 
                budget: int = 10000, run: str = '1', save: bool = False):
     if tn_active:
@@ -137,8 +137,6 @@ def q_learning(max_eps: int, learning_rate: float = 0.01, epsilon: float = None,
 
     max_episode_length = 500  # CartPole limits naturally at 475
     train_model_freq = 4
-    update_target_freq = int(1000)
-
 
     # init game
     env = gym.make("CartPole-v1")  # , render_mode='human'
