@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
+run = 1
 
-losses = np.load('runs/all_losses.npy')
-rewards = np.load('runs/all_ep_rewards.npy')
+rewards = np.load(f'runs/tmp_curve.npy')
 
 def simple_plot(y_vals, x_vals = None, file = None):
     if x_vals:
@@ -17,5 +17,4 @@ def simple_plot(y_vals, x_vals = None, file = None):
 
 print(len(rewards))
 rewards = np.mean(rewards.reshape(-1, 10), axis=1)
-simple_plot(losses, file='Loss')
 simple_plot(rewards, file='Reward')

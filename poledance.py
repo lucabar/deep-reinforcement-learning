@@ -124,12 +124,16 @@ class DQN_Agent():
             self.state_sample = self.draw_sample()  # after having updated the buffer, update/create samples to learn from
 
 
-def q_learning(max_eps: int, budget: int, learning_rate: float = 0.01, epsilon: float = 0.01, temp: float = None, optimizer: str = 'rmsprop',
-               batch_size: int = 32, tn_active: bool =tn_active, er_active: bool=er_active, run: str = '1', save: bool = False):
+def q_learning(max_eps: int, learning_rate: float = 0.01, epsilon: float = 0.01, temp: float = None, 
+               optimizer: str = 'rmsprop', batch_size: int = 32,
+               tn_active: bool =tn_active, er_active: bool=er_active, 
+               budget: int = 10000, run: str = '1', save: bool = False):
     if tn_active:
+        print()
         print('Activating target network...')
     if er_active:
         print('Activating experience replay...')
+        print()
 
     max_episode_length = 500  # CartPole limits naturally at 475
     train_model_freq = 4
@@ -204,7 +208,4 @@ def q_learning(max_eps: int, budget: int, learning_rate: float = 0.01, epsilon: 
     return total_rewards
 
 if __name__ == "__main__":
-    budget = 100000
-    max_eps = 200
-
-    rewards = q_learning(max_eps, budget=budget, learning_rate=0.001, tn_active=tn_active, er_active=er_active, save=True)
+    rewards = q_learning(max_eps=200, learning_rate=0.001, tn_active=tn_active, er_active=er_active, save=True)
