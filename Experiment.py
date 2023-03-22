@@ -63,7 +63,7 @@ def experiment():
                 np.save(f'runs/tmp_curve', learning_curve)
                 Plot.add_curve(
                     learning_curve, label=r'$\epsilon$-greedy, $\epsilon $ = {}'.format(epsilon))
-                Plot.save(f'{stamp}_l{learning_rate}_e{epsilon}_b{batch_size}_u{update_target_freq}.pdf')
+                Plot.save(f'runs/{stamp}_l{learning_rate}_e{epsilon}_b{batch_size}_u{update_target_freq}.pdf')
                 print(f"-----Test {test_nb} done!-----")
 
 
