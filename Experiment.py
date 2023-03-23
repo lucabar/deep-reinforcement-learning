@@ -59,7 +59,7 @@ def experiment():
                 Plot = LearningCurvePlot(
                     title=f'Learning rate: {learning_rate}, batch size: {batch_size}, target update: {update_target_freq}')
 
-                learning_curve = average_over_repetitions(100, n_repetitions, learning_rate, epsilon=epsilon, batch_size=batch_size, update_target_freq=update_target_freq)
+                learning_curve = average_over_repetitions(200, n_repetitions, learning_rate, epsilon=epsilon, batch_size=batch_size, update_target_freq=update_target_freq)
                 stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
 
                 np.save(f'runs/tmp_curve', learning_curve)
