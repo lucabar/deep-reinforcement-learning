@@ -3,7 +3,7 @@ import tensorflow as tf
 import gymnasium as gym
 import sys
 
-from Helper import make_tensor, stable_loss, softmax, e_greedy
+from Helper import make_tensor, stable_loss, softmax, e_greedy, linear_anneal
 
 
 args = sys.argv[1:]
@@ -36,29 +36,25 @@ class Q_Network():
         self.learning_rate = learning_rate
         self.optimizer = optimizer
         self.batch_size = batch_size
-        a1, a2, a3 = 1,0,0
+        a1, a2, a3 = 0,0,1
         self.gamma = 0.99
 
         if a1:
             self.model = tf.keras.Sequential([
-                tf.keras.layers.Dense(
-                    20, activation='relu', kernel_initializer='he_uniform', input_shape=(4,)),
-                tf.keras.layers.Dense(10, activation='relu',
-                                kernel_initializer='he_uniform'),
+                tf.keras.layers.Dense(20, activation='relu', kernel_initializer='he_uniform', input_shape=(4,)),
+                tf.keras.layers.Dense(10, activation='relu', kernel_initializer='he_uniform'),
                 tf.keras.layers.Dense(2, activation='linear')
             ])
         elif a2:
             self.model = tf.keras.Sequential([
-                tf.keras.layers.Dense(30, activation='relu',
-                                kernel_initializer='he_uniform'),
+                tf.keras.layers.Dense(30, activation='relu', kernel_initializer='he_uniform', input_shape=(4,)),
                 tf.keras.layers.Dense(2, activation='linear')
             ])
         elif a3:
             self.model = tf.keras.Sequential([
-                tf.keras.layers.Dense(
-                    20, activation='relu', kernel_initializer='he_uniform', input_shape=(4,)),
-                tf.keras.layers.Dense(10, activation='relu',
-                                kernel_initializer='he_uniform'),
+                tf.keras.layers.Dense(10, activation='relu', kernel_initializer='he_uniform', input_shape=(4,)),
+                tf.keras.layers.Dense(10, activation='relu', kernel_initializer='he_uniform'),
+                tf.keras.layers.Dense(10, activation='relu', kernel_initializer='he_uniform'),
                 tf.keras.layers.Dense(2, activation='linear')
             ])
 
@@ -183,6 +179,7 @@ def q_learning(max_eps: int, learning_rate: float = 0.01, epsilon: float = None,
 
 
     while step_count < budget:  # to limit environment interaction
+        agent.epsilon = linear_anneal(ep_count, max_eps, epsilon, 0.05*epsilon, 0.7)
         ep_count += 1
         ep_reward = 0
         timestep = 0

@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-run = 1
 
-rewards = np.load(f'runs/tmp_curve.npy')
+run = 1
+path = '23_164716_l0.0025_e0.05_b32_u50_a3.npy'
+rewards = np.load(f'runs/data/{path}')
 
 def simple_plot(y_vals, x_vals = None, file = None):
     if x_vals:
@@ -16,5 +17,6 @@ def simple_plot(y_vals, x_vals = None, file = None):
     return
 
 print(len(rewards))
-rewards = np.mean(rewards.reshape(-1, 10), axis=1)
-simple_plot(rewards, file='Reward')
+rewards_conv = np.mean(rewards.reshape(-1, 10), axis=1)
+simple_plot(rewards)
+simple_plot(rewards_conv)
