@@ -32,20 +32,36 @@ for arg in args:
 class Q_Network():
     '''General deep Q Network'''
 
-    def __init__(self, learning_rate: float, optimizer: str, batch_size: int = 32, layers: list = [20,10] ):
+    def __init__(self, learning_rate: float, optimizer: str, batch_size: int = 32 ):
         self.learning_rate = learning_rate
         self.optimizer = optimizer
         self.batch_size = batch_size
-
+        a1, a2, a3 = 1,0,0
         self.gamma = 0.99
 
-        self.model = tf.keras.Sequential([
-            tf.keras.layers.Dense(
-                20, activation='relu', kernel_initializer='he_uniform', input_shape=(4,)),
-            tf.keras.layers.Dense(10, activation='relu',
-                               kernel_initializer='he_uniform'),
-            tf.keras.layers.Dense(2, activation='linear')
-        ])
+        if a1:
+            self.model = tf.keras.Sequential([
+                tf.keras.layers.Dense(
+                    20, activation='relu', kernel_initializer='he_uniform', input_shape=(4,)),
+                tf.keras.layers.Dense(10, activation='relu',
+                                kernel_initializer='he_uniform'),
+                tf.keras.layers.Dense(2, activation='linear')
+            ])
+        elif a2:
+            self.model = tf.keras.Sequential([
+                tf.keras.layers.Dense(30, activation='relu',
+                                kernel_initializer='he_uniform'),
+                tf.keras.layers.Dense(2, activation='linear')
+            ])
+        elif a3:
+            self.model = tf.keras.Sequential([
+                tf.keras.layers.Dense(
+                    20, activation='relu', kernel_initializer='he_uniform', input_shape=(4,)),
+                tf.keras.layers.Dense(10, activation='relu',
+                                kernel_initializer='he_uniform'),
+                tf.keras.layers.Dense(2, activation='linear')
+            ])
+
         if optimizer == 'adam':
             optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
         elif optimizer == 'rmsprop':

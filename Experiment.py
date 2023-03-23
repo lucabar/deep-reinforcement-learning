@@ -18,7 +18,6 @@ def average_over_repetitions(eps, n_repetitions, learning_rate,
         print(f'Rep. number {rep+1}')
         rewards = q_learning(eps, learning_rate, epsilon=epsilon, temp=temp, batch_size=batch_size, update_target_freq=update_target_freq)
         reward_results[rep] = rewards
-
     print('Running one setting takes {} minutes'.format((time.time()-now)/60))
     # average over repetitions
     learning_curve = np.mean(reward_results, axis=0)
@@ -43,11 +42,11 @@ def experiment():
     batch_size = 32
 
     # lists of hyperparameters
-    learning_rates = [0.00025, 0.0025]
+    learning_rates = [0.0025]
     batch_sizes =  [32]
     test_nb = 0
 
-    update_target_freqs = [100, 500, 1000]
+    update_target_freqs = [50]
     alternatives = [(True,True),(False,False),(True,False),(False,True)]  # tests with various target_network or experience replay
 
     for update_target_freq in update_target_freqs:
@@ -59,13 +58,13 @@ def experiment():
                 Plot = LearningCurvePlot(
                     title=f'Learning rate: {learning_rate}, batch size: {batch_size}, target update: {update_target_freq}')
 
-                learning_curve = average_over_repetitions(200, n_repetitions, learning_rate, epsilon=epsilon, batch_size=batch_size, update_target_freq=update_target_freq)
+                learning_curve = average_over_repetitions(600, n_repetitions, learning_rate, epsilon=epsilon, batch_size=batch_size, update_target_freq=update_target_freq)
                 stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
 
                 np.save(f'runs/tmp_curve', learning_curve)
                 Plot.add_curve(
                     learning_curve, label=r'$\epsilon$-greedy, $\epsilon $ = {}'.format(epsilon))
-                Plot.save(f'runs/{stamp}_l{learning_rate}_e{epsilon}_b{batch_size}_u{update_target_freq}.pdf')
+                Plot.save(f'runs/{stamp}_l{learning_rate}_e{epsilon}_b{batch_size}_u{update_target_freq}_a2.pdf')
                 print(f"-----Test {test_nb}, l{learning_rate}, b{batch_size}, u{update_target_freq} done!-----")
 
 
