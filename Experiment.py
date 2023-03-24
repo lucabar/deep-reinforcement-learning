@@ -9,7 +9,7 @@ from Helper import LearningCurvePlot, smooth
 
 
 def average_over_repetitions(eps, n_repetitions, learning_rate,
-                             epsilon=None, temp=None, smoothing_window=5, batch_size=32, update_target_freq=100):
+                             epsilon=None, temp=None, smoothing_window=20, batch_size=32, update_target_freq=100):
 
     reward_results = np.empty([n_repetitions, eps])  # Result array
     now = time.time()
@@ -17,7 +17,10 @@ def average_over_repetitions(eps, n_repetitions, learning_rate,
     for rep in range(n_repetitions):  # Loop over repetitions
         print(f'Rep. number {rep+1}')
         rewards = q_learning(eps, learning_rate, epsilon=epsilon, temp=temp, batch_size=batch_size, update_target_freq=update_target_freq)
-        reward_results[rep] = rewards
+        try:
+            reward_results[rep] = rewards
+        except:
+            return rewards
     print('Running one setting takes {} minutes'.format((time.time()-now)/60))
     # average over repetitions
     learning_curve = np.mean(reward_results, axis=0)
@@ -33,7 +36,7 @@ def experiment():
 
     # Parameters we will vary in the experiments, set them to some initial values:
     # Exploration
-    epsilon = 0.05
+    epsilon = 1
     temp = 1.0
     test_nb = 0
 
@@ -43,9 +46,9 @@ def experiment():
     batch_size = 32
 
     # lists of hyperparameters
-    learning_rates = [0.001, 0.0025]
+    learning_rates = [0.001]
     batch_sizes =  [32]
-    update_target_freqs = [4]
+    update_target_freqs = [100]
 
     alternatives = [(True,True),(False,False),(True,False),(False,True)]  # tests with various target_network or experience replay
 
@@ -58,14 +61,17 @@ def experiment():
                 Plot = LearningCurvePlot(
                     title=f'Learning rate: {learning_rate}, batch size: {batch_size}, target update: {update_target_freq}')
 
-                learning_curve = average_over_repetitions(200, n_repetitions, learning_rate, epsilon=epsilon, batch_size=batch_size, update_target_freq=update_target_freq)
+                learning_curve = average_over_repetitions(500, n_repetitions, learning_rate, epsilon=epsilon, batch_size=batch_size, update_target_freq=update_target_freq)
                 stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
 
                 np.save(f'runs/data/{stamp}_l{learning_rate}_e{epsilon}_b{batch_size}_u{update_target_freq}_a3', learning_curve)
-                Plot.add_curve(
-                    learning_curve, label=r'$\epsilon$-greedy, $\epsilon $ = {}'.format(epsilon))
-                Plot.save(f'runs/{stamp}_l{learning_rate}_e{epsilon}_b{batch_size}_u{update_target_freq}_a3.pdf')
-                print(f"-----Test {test_nb}, l{learning_rate}, b{batch_size}, u{update_target_freq} done!-----")
+                try:
+                    Plot.add_curve(
+                        learning_curve, label=r'$\epsilon$-greedy, $\epsilon $ = {}'.format(epsilon))
+                    Plot.save(f'runs/{stamp}_l{learning_rate}_e{epsilon}_b{batch_size}_u{update_target_freq}_a4.pdf')
+                    print(f"-----Test {test_nb}, l{learning_rate}, b{batch_size}, u{update_target_freq} done!-----")
+                except:
+                    print('rewards', learning_curve)
 
 
 if __name__ == '__main__':

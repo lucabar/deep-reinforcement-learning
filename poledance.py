@@ -147,10 +147,15 @@ class DQN_Agent():
             self.rewards += [reward]
             self.n_states += [next_state]
             self.dones += [done]
+            if len(self.states) > self.max_buffer:
+                self.states = self.states[-self.max_buffer:]
+                self.actions = self.actions[-self.max_buffer:]
+                self.rewards = self.rewards[-self.max_buffer:]
+                self.n_states = self.n_states[-self.max_buffer:]
+                self.dones = self.dones[-self.max_buffer:]
             self.buffer = [self.states, self.actions, self.rewards, self.n_states, self.dones]
 
-            if len(self.buffer) > self.max_buffer:
-                self.buffer_clip(1)
+            
 
 def q_learning(max_eps: int, learning_rate: float = 0.001, epsilon: float = None, temp: float = None, 
                optimizer: str = 'rmsprop', batch_size: int = 32, update_target_freq: int = 100,
@@ -194,8 +199,8 @@ def q_learning(max_eps: int, learning_rate: float = 0.001, epsilon: float = None
     ep_count = 0  # counts terminated/truncated episodes
 
 
-    while step_count < budget:  # to limit environment interaction
-        agent.epsilon = linear_anneal(ep_count, max_eps, epsilon, 0.2*epsilon, 0.7)
+    while True:  # to limit environment interaction
+        agent.epsilon = linear_anneal(ep_count, max_eps, epsilon, 0.01*epsilon, 0.7)
         ep_count += 1
         ep_reward = 0
         timestep = 0
@@ -216,7 +221,7 @@ def q_learning(max_eps: int, learning_rate: float = 0.001, epsilon: float = None
             ep_reward += reward
             state = next_state
 
-            if step_count % train_model_freq == 0:
+            if step_count % train_model_freq == 0 and ep_count > 50:
                 # training Q net
                 states, actions, rewards, next_states, dones = agent.draw_sample()
                 target_output = target_network.model.predict(np.array(next_states), verbose=0)
@@ -232,12 +237,9 @@ def q_learning(max_eps: int, learning_rate: float = 0.001, epsilon: float = None
                 target_network.model.set_weights(q_network.model.get_weights())
 
             if term or trunk:
-                total_rewards += [ep_reward]
-                state, info = env.reset()
                 break
 
-        if not term and not trunk:  # equivalent to saying timestep >= max_episode_length
-            total_rewards += [ep_reward]
+        total_rewards += [ep_reward]
 
         if ep_count % 100 == 0 and save:
             np.save(f'runs/rewards{run}', np.array(total_rewards))
@@ -248,5 +250,4 @@ def q_learning(max_eps: int, learning_rate: float = 0.001, epsilon: float = None
     return total_rewards
 
 if __name__ == "__main__":
-    rewards = q_learning(max_eps=600, learning_rate=0.001, epsilon=0.5, tn_active=tn_active, er_active=er_active, save=True)
-    print(rewards)
+    rewards = q_learning(max_eps=600, learning_rate=0.001, epsilon=1, tn_active=tn_active, er_active=er_active, save=True)

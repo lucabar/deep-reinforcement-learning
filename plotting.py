@@ -2,8 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 run = 1
-path = '23_164716_l0.0025_e0.05_b32_u50_a3.npy'
-rewards = np.load(f'runs/rewards1.npy')
+path = '24_230545_l0.001_e0.05_b32_u100_a4.npy'
+rewards = np.load(f'runs/data/{path}')
+# rewards = np.load('runs/rewards1.npy')
 
 def simple_plot(y_vals, x_vals = None, file = None):
     if x_vals:
@@ -17,6 +18,6 @@ def simple_plot(y_vals, x_vals = None, file = None):
     return
 
 print(len(rewards))
-rewards_conv = np.mean(rewards.reshape(-1, 10), axis=1)
+rewards_conv = np.mean(rewards[3:].reshape(-1, 10), axis=1)
 simple_plot(rewards)
 simple_plot(rewards_conv)
