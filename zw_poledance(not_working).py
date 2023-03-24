@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 import gymnasium as gym
 import sys
-import itertools
+from collections import deque
 
 from Helper import make_tensor, stable_loss, softmax, e_greedy, linear_anneal
 
@@ -74,8 +74,11 @@ class Q_Network():
     def update(self, states, actions, rewards, dones, target_output):
         '''learning of network'''
         states = make_tensor(states, list=True)
-        # target value to compare to
-        target_val = rewards + (np.ones((len(dones)))-dones) * self.gamma * np.max(target_output, axis=1)
+        # target value to compare to np.ones((len(dones)))
+        print(1-dones)
+        print()
+        print(target_output)
+        target_val = rewards + (1-dones) * self.gamma * np.max(target_output, axis=1)
         #print(target_val)
         mask = tf.one_hot(actions, 2)
 
@@ -96,6 +99,7 @@ class DQN_Agent():
         self.batch_size = batch_size
         self.max_buffer = max_buffer
         self.replay = replay
+        self.replay_buffer = deque(maxlen=2000)
 
         self.states, self.actions, self.rewards, self.n_states, self.dones = [], [], [] , [], []
         self.sample = []  # init not really needed, just for overview of attributes
@@ -127,7 +131,7 @@ class DQN_Agent():
 
     def draw_sample(self):
         '''create (random) sample of length batch_size to be trained with'''
-
+        '''
         if len(self.buffer[0]) <= self.batch_size:
             states, actions, rewards, next_states, dones = self.buffer
 
@@ -139,6 +143,14 @@ class DQN_Agent():
             batch = [self.buffer[i][-self.batch_size:] for i in range(5)]
             states, actions, rewards, next_states, dones = batch
         return states, actions, rewards, next_states, dones
+        '''
+        indices = np.random.randint(len(self.replay_buffer), size=self.batch_size) 
+        batch = [self.replay_buffer[index] for index in indices]
+        states, actions, rewards, next_states, dones = [np.array([experience[field_index] 
+                                                                  for experience in batch]) 
+                                                                  for field_index in range(5)]
+        return states, actions, rewards, next_states, dones
+
 
     def buffer_update(self, state, action, reward, next_state, done):
             ''' append newly obtained environment state to memory'''
@@ -148,9 +160,11 @@ class DQN_Agent():
             self.n_states += [next_state]
             self.dones += [done]
             self.buffer = [self.states, self.actions, self.rewards, self.n_states, self.dones]
-
-            if len(self.buffer) > self.max_buffer:
-                self.buffer_clip(1)
+            self.replay_buffer.append((self.states, self.actions, self.rewards, self.n_states, self.dones))
+            '''
+            if len(self.replay_buffer) > self.max_buffer:
+                self.replay_buffer[-self.max_buffer:]
+            '''
 
 def q_learning(max_eps: int, learning_rate: float = 0.001, epsilon: float = None, temp: float = None, 
                optimizer: str = 'rmsprop', batch_size: int = 32, update_target_freq: int = 100,
@@ -211,21 +225,21 @@ def q_learning(max_eps: int, learning_rate: float = 0.001, epsilon: float = None
 
             action = agent.draw_action(state, q_network)
             next_state, reward, term, trunk, info = env.step(action=action)
-
+            
             agent.buffer_update(state, action, reward, next_state, term or trunk)
             ep_reward += reward
             state = next_state
 
-            if step_count % train_model_freq == 0:
+            if ep_count > 20 and timestep > 32:
                 # training Q net
                 states, actions, rewards, next_states, dones = agent.draw_sample()
-                target_output = target_network.model.predict(np.array(next_states), verbose=0)
+                print(np.array(next_states).shape)
+                target_output = target_network.model.predict(next_states, verbose=0)
                 q_network.update(states, actions, rewards, dones, target_output)
 
                 if not tn_active:
                     # keeping target same as Q net
                     target_network.model.set_weights(q_network.model.get_weights())
-
 
             if step_count % update_target_freq == 0 and tn_active:
                 # only update target every n-th step
@@ -248,5 +262,5 @@ def q_learning(max_eps: int, learning_rate: float = 0.001, epsilon: float = None
     return total_rewards
 
 if __name__ == "__main__":
-    rewards = q_learning(max_eps=600, learning_rate=0.001, epsilon=0.5, tn_active=tn_active, er_active=er_active, save=True)
+    rewards = q_learning(max_eps=300, learning_rate=0.001, epsilon=0.5, tn_active=tn_active, er_active=er_active, save=True)
     print(rewards)

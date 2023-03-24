@@ -35,6 +35,7 @@ def experiment():
     # Exploration
     epsilon = 0.05
     temp = 1.0
+    test_nb = 0
 
     # single value test
     learning_rate = 0.001
@@ -44,9 +45,8 @@ def experiment():
     # lists of hyperparameters
     learning_rates = [0.001, 0.0025]
     batch_sizes =  [32]
-    test_nb = 0
+    update_target_freqs = [4]
 
-    update_target_freqs = [50,500]
     alternatives = [(True,True),(False,False),(True,False),(False,True)]  # tests with various target_network or experience replay
 
     for update_target_freq in update_target_freqs:
