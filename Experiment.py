@@ -32,7 +32,7 @@ def average_over_repetitions(eps, n_repetitions, learning_rate,
 def experiment():
     # Settings
     # Experiment
-    n_repetitions = 5
+    n_repetitions = 10
 
     # Parameters we will vary in the experiments, set them to some initial values:
     # Exploration
@@ -48,7 +48,7 @@ def experiment():
     # lists of hyperparameters
     learning_rates = [0.001]
     batch_sizes =  [32]
-    update_target_freqs = [100]
+    update_target_freqs = [4,500,1000]
 
     alternatives = [(True,True),(False,False),(True,False),(False,True)]  # tests with various target_network or experience replay
 
@@ -61,7 +61,7 @@ def experiment():
                 Plot = LearningCurvePlot(
                     title=f'Learning rate: {learning_rate}, batch size: {batch_size}, target update: {update_target_freq}')
 
-                learning_curve = average_over_repetitions(500, n_repetitions, learning_rate, epsilon=epsilon, batch_size=batch_size, update_target_freq=update_target_freq)
+                learning_curve = average_over_repetitions(300, n_repetitions, learning_rate, epsilon=epsilon, batch_size=batch_size, update_target_freq=update_target_freq)
                 stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
 
                 np.save(f'runs/data/{stamp}_l{learning_rate}_e{epsilon}_b{batch_size}_u{update_target_freq}_a3', learning_curve)

@@ -1,10 +1,15 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+
+args = sys.argv[1:]
 
 run = 1
-path = '24_230545_l0.001_e0.05_b32_u100_a4.npy'
-rewards = np.load(f'runs/data/{path}')
-# rewards = np.load('runs/rewards1.npy')
+path = args[0]
+rewards = np.load(f'{str(path)}')
 
 def simple_plot(y_vals, x_vals = None, file = None):
     if x_vals:
@@ -18,6 +23,6 @@ def simple_plot(y_vals, x_vals = None, file = None):
     return
 
 print(len(rewards))
-rewards_conv = np.mean(rewards[3:].reshape(-1, 10), axis=1)
+rewards_conv = np.mean(rewards.reshape(-1, 10), axis=1)
 simple_plot(rewards)
 simple_plot(rewards_conv)

@@ -14,7 +14,7 @@ debug = True
 
 if debug:
     print('DEBUG')
-    tn_active = True
+    tn_active = False
     er_active = True
 
 # handling of command line arguments
@@ -200,13 +200,13 @@ def q_learning(max_eps: int, learning_rate: float = 0.001, epsilon: float = None
 
 
     while True:  # to limit environment interaction
-        agent.epsilon = linear_anneal(ep_count, max_eps, epsilon, 0.01*epsilon, 0.7)
+        agent.epsilon = linear_anneal(ep_count, max_eps, epsilon, 0.1*epsilon, 0.7)
         ep_count += 1
         ep_reward = 0
         timestep = 0
 
         if ep_count % 20 == 0 and debug:
-            print(f"mean reward of last 20 {np.mean(total_rewards[-20:])}")
+            print(f"ep: {ep_count}, mean reward of last 20 {np.mean(total_rewards[-20:])}")
 
         state, info = env.reset()
 
@@ -250,4 +250,4 @@ def q_learning(max_eps: int, learning_rate: float = 0.001, epsilon: float = None
     return total_rewards
 
 if __name__ == "__main__":
-    rewards = q_learning(max_eps=600, learning_rate=0.001, epsilon=1, tn_active=tn_active, er_active=er_active, save=True)
+    rewards = q_learning(max_eps=300, learning_rate=0.001, epsilon=1, tn_active=tn_active, er_active=er_active, save=True)
