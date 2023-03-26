@@ -35,7 +35,7 @@ def build():
     model = keras.models.Sequential([
         # use 64 neurons in only one layer
         # use 512, 256, 64
-    keras.layers.Dense(64, activation="elu", input_shape=input_shape),
+    keras.layers.Dense(128, activation="elu", input_shape=input_shape),
     #keras.layers.Dense(32, activation="elu"),
     keras.layers.Dense(n_outputs)
     # tune (output) activation relu or tanh maybe, output linear
@@ -90,18 +90,22 @@ for episode in range(eps):
     if episode % 20 == 0:
         print('ep: ', episode)
     R = 0
+
+    ### one episode
     for step in range(475):
         epsilon = max(1 - episode / 500, 0.02)
         obs, reward, done, info = play_one_step(env, obs, epsilon)
         R += reward
         if done:
             break
+    ###
+
     if episode > 50:
         training_step(batch_size, target)
     if episode % target_update_freq == 0:
         target.set_weights(model.get_weights())
     ep_rewards += [R]
-    if (episode % 100)-1 == 0:
+    if episode % 100 == 0:
         np.save(f"runs/book/tmp_rew.npy",np.array(ep_rewards))
 
 stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
