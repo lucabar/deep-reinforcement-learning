@@ -23,27 +23,51 @@ target_update_freq = 10
 
 env = gym.make("CartPole-v1")
 
+
 input_shape = [4] # == env.observation_space.shape
 n_outputs = 2 # == env.action_space.n
 
-def build():
-    #1 decrease replay
-    replay_buffer = deque(maxlen=5000)
-    #2 change learning rate 0.05
-    optimizer = keras.optimizers.Adam(learning_rate=0.05)
-    loss_fn = keras.losses.mean_squared_error
-    model = keras.models.Sequential([
+def build_model(j: int = 1, activ: str = "elu"):
+    if j == 1:
+        model = keras.models.Sequential([
         # use 64 neurons in only one layer
         # use 512, 256, 64
-    keras.layers.Dense(128, activation="elu", input_shape=input_shape),
-    #keras.layers.Dense(32, activation="elu"),
-    keras.layers.Dense(n_outputs)
-    # tune (output) activation relu or tanh maybe, output linear
-    ])
+        keras.layers.Dense(64, activation=activ, input_shape=input_shape),
+        #keras.layers.Dense(32, activation="elu"),
+        keras.layers.Dense(n_outputs)
+        # tune (output) activation relu or tanh maybe, output linear
+        ])
+    elif j == 2:
+        model = tf.keras.Sequential([
+            tf.keras.layers.Dense(32, activation=activ, input_shape=(4,)),
+            tf.keras.layers.Dense(2)
+        ])
+    elif j == 3:
+        model = tf.keras.Sequential([
+            tf.keras.layers.Dense(32, activation=activ, input_shape=(4,)),
+            tf.keras.layers.Dense(32, activation=activ),
+            tf.keras.layers.Dense(2)
+        ])
+    elif j == 4:
+        model = tf.keras.Sequential([
+            tf.keras.layers.Dense(16, activation=activ, input_shape=(4,)),
+            tf.keras.layers.Dense(16, activation=activ),
+            tf.keras.layers.Dense(16, activation=activ),
+            tf.keras.layers.Dense(2)
+        ])
+    return model
+
+
+def build(j: int = 1, lr: float = 0.01):
+    #1 decrease replay
+    #2 change learning rate 0.05
+    optimizer = keras.optimizers.Adam(learning_rate=lr)
+    loss_fn = keras.losses.mean_squared_error
+    model = build_model(j)
     model.compile(optimizer, loss_fn)
     target = keras.models.clone_model(model)
     target.set_weights(model.get_weights())
-    return model, optimizer, replay_buffer, target
+    return model, optimizer, target
 
 def epsilon_greedy_policy(state, epsilon=0):
     if np.random.rand() < epsilon:
@@ -81,32 +105,81 @@ def play_one_step(env, state, epsilon):
     replay_buffer.append((state, action, reward, next_state, done))
     return next_state, reward, done, info
 
-eps = 800
+# hyperparameter testing
 
-model, optimizer, replay_buffer, target = build()
-ep_rewards = []
-for episode in range(eps):
-    obs = env.reset()
-    if episode % 20 == 0:
-        print('ep: ', episode)
-    R = 0
+learning_rates = [0.1, 0.01, 0.001, 0.0001]
+replay_buffer_sizes = [1000, 3000, 5000]
+batch_sizes = [16, 32, 64]
+model_archs = [1, 2, 3]
+target_update_freqs = [10, 100, 500]
 
-    ### one episode
-    for step in range(475):
-        epsilon = max(1 - episode / 500, 0.02)
-        obs, reward, done, info = play_one_step(env, obs, epsilon)
-        R += reward
-        if done:
-            break
-    ###
+best_hyperparameters = None
+gold_reward = 0
+silver_reward = 0
+bronze_reward = 0
 
-    if episode > 50:
-        training_step(batch_size, target)
-    if episode % target_update_freq == 0:
-        target.set_weights(model.get_weights())
-    ep_rewards += [R]
-    if episode % 100 == 0:
-        np.save(f"runs/book/tmp_rew.npy",np.array(ep_rewards))
+# iterate over all hyperparameters
+count = 0
+print()
+print("hyperparams: learning rate, model_arch, batch_size, target_update_freq, replay_buffer_size")
 
-stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
-np.save(f"runs/book/rewards_{stamp}.npy",ep_rewards)
+for lr in learning_rates:
+    for batch_size in batch_sizes:
+        for model_arch in model_archs:
+            for target_update_freq in target_update_freqs:
+                for replay_buffer_size in replay_buffer_sizes:
+                    count +=1
+                    print()
+                    print(f"---Starting Test {count}, {lr,model_arch, batch_size, target_update_freq, replay_buffer_size}---")
+
+                    # build model
+                    replay_buffer = deque(maxlen=replay_buffer_size)
+                    model, optimizer, target = build(model_arch, lr)
+                    ep_rewards = []
+                    eps = 500
+
+                    # model training
+                    for episode in range(eps):
+                        obs = env.reset()
+
+                        cumulative_reward = 0
+
+                        ### one episode
+                        for step in range(475):
+                            epsilon = max(1 - episode / 500, 0.02)
+                            obs, reward, done, info = play_one_step(env, obs, epsilon)
+                            cumulative_reward += reward
+                            if done:
+                                break
+                        ###
+
+                        if episode > 50:  # and episode < int(2*eps/3)
+                            training_step(batch_size, target)
+                            if episode % target_update_freq == 0:
+                                target.set_weights(model.get_weights())
+                        ep_rewards += [cumulative_reward]
+
+                    # save the best hyperparameters
+                    rew_mean = np.mean(ep_rewards[50:])
+                    if rew_mean > gold_reward:
+                        gold_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
+                        gold_reward = rew_mean
+                    elif rew_mean > silver_reward:
+                        silver_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
+                        silver_reward = rew_mean
+                    elif rew_mean > bronze_reward:
+                        bronze_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
+                        bronze_reward = rew_mean
+                    print(f"best reward {gold_reward} at count {count}")
+                    print()
+                    np.save(f"runs/book/rew{count}.npy",np.array(ep_rewards))
+
+
+print('best hyperparameters: ', gold_hyperparameters)
+print('best avg reward: ', gold_reward)
+
+print('2nd hyperparameters: ', silver_hyperparameters)
+print('2nd avg reward: ', silver_reward)
+
+print('3rd hyperparameters: ', bronze_hyperparameters)
+print('3rd avg reward: ', bronze_reward)
