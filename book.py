@@ -108,10 +108,10 @@ def play_one_step(env, state, epsilon):
 # hyperparameter testing
 
 learning_rates = [0.1, 0.01, 0.001, 0.0001]
-replay_buffer_sizes = [1000, 3000, 5000]
 batch_sizes = [16, 32, 64]
 model_archs = [1, 2, 3]
 target_update_freqs = [10, 100, 500]
+replay_buffer_sizes = [1000, 3000, 5000]
 
 best_hyperparameters = None
 gold_reward = 0
@@ -132,7 +132,7 @@ for lr in learning_rates:
                 for replay_buffer_size in replay_buffer_sizes:
                     count +=1
                     ## skip first 47 runs, we already did them!
-                    if count <= 47:
+                    if count <= 74:
                         continue
                     print()
                     print(f"---Starting Test {count}, {lr, batch_size,model_arch, target_update_freq, replay_buffer_size}---")
