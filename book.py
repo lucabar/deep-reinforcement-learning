@@ -123,7 +123,7 @@ gold_median = 0
 # iterate over all hyperparameters
 count = 0
 print()
-print("hyperparams: learning rate, model_arch, batch_size, target_update_freq, replay_buffer_size")
+print("hyperparams: learning rate, batch_size, model_arch, target_update_freq, replay_buffer_size")
 
 for lr in learning_rates:
     for batch_size in batch_sizes:
@@ -131,8 +131,11 @@ for lr in learning_rates:
             for target_update_freq in target_update_freqs:
                 for replay_buffer_size in replay_buffer_sizes:
                     count +=1
+                    ## skip first 47 runs, we already did them!
+                    if count <= 47:
+                        continue
                     print()
-                    print(f"---Starting Test {count}, {lr,model_arch, batch_size, target_update_freq, replay_buffer_size}---")
+                    print(f"---Starting Test {count}, {lr, batch_size,model_arch, target_update_freq, replay_buffer_size}---")
 
                     # build model
                     replay_buffer = deque(maxlen=replay_buffer_size)
