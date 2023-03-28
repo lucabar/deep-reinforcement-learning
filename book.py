@@ -118,6 +118,8 @@ gold_reward = 0
 silver_reward = 0
 bronze_reward = 0
 
+gold_median = 0
+
 # iterate over all hyperparameters
 count = 0
 print()
@@ -161,6 +163,7 @@ for lr in learning_rates:
 
                     # save the best hyperparameters
                     rew_mean = np.mean(ep_rewards[50:])
+                    rew_median = np.median(ep_rewards[50:], axis=0)
                     if rew_mean > gold_reward:
                         gold_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
                         gold_reward = rew_mean
@@ -170,7 +173,11 @@ for lr in learning_rates:
                     elif rew_mean > bronze_reward:
                         bronze_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
                         bronze_reward = rew_mean
-                    print(f"best reward {gold_reward} at count {count}")
+
+                    if rew_median > gold_median:
+                        gold_median = rew_median
+                        gold_med_hyperparam = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
+                    print(f"best reward {gold_reward}, highest median {gold_median}")
                     print()
                     np.save(f"runs/book/rew{count}.npy",np.array(ep_rewards))
 
@@ -183,3 +190,6 @@ print('2nd avg reward: ', silver_reward)
 
 print('3rd hyperparameters: ', bronze_hyperparameters)
 print('3rd avg reward: ', bronze_reward)
+
+print('best median: ', gold_median)
+print('best hyperparams (med): ', gold_med_hyperparam)
