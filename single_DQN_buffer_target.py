@@ -57,7 +57,6 @@ def build_model(j: int = 1, activ: str = "elu"):
         ])
     return model
 
-
 def build(j: int = 1, lr: float = 0.01):
     #1 decrease replay
     #2 change learning rate 0.05
@@ -98,7 +97,6 @@ def training_step(batch_size, target):
         loss = tf.reduce_mean(loss_fn(target_Q_values, Q_values))
     grads = tape.gradient(loss, model.trainable_variables)
     optimizer.apply_gradients(zip(grads, model.trainable_variables))
-    return Q_values
 
 def play_one_step(env, state, epsilon):
     action = epsilon_greedy_policy(state, epsilon)
@@ -108,11 +106,11 @@ def play_one_step(env, state, epsilon):
 
 # hyperparameter testing
 
-learning_rates = [0.1, 0.01, 0.001, 0.0001]
-batch_sizes = [16, 32, 64]
+learning_rates = [0.0001]
+batch_sizes = [16]
 model_archs = [1, 2, 3]
-target_update_freqs = [10, 100, 500]
-replay_buffer_sizes = [1000, 3000, 5000]
+target_update_freqs = [500]
+replay_buffer_sizes = [1000]
 
 best_hyperparameters = None
 gold_reward = 0
@@ -132,18 +130,15 @@ for lr in learning_rates:
             for target_update_freq in target_update_freqs:
                 for replay_buffer_size in replay_buffer_sizes:
                     count +=1
-                    ## skip first n runs, we already did them!
-                    if count < 276:
-                        continue
+                    ## skip first 47 runs, we already did them!
                     print()
-                    start = time.time()
                     print(f"---Starting Test {count}, {lr, batch_size,model_arch, target_update_freq, replay_buffer_size}---")
 
                     # build model
                     replay_buffer = deque(maxlen=replay_buffer_size)
                     model, optimizer, target = build(model_arch, lr)
                     ep_rewards = []
-                    eps = 500
+                    eps = 1500
 
                     # model training
                     for episode in range(eps):
@@ -153,44 +148,43 @@ for lr in learning_rates:
 
                         ### one episode
                         for step in range(475):
-                            epsilon = max(1 - episode / 500, 0.02)  # idea: couple annealing epsilon not to ep count but reward?
+                            epsilon = max(1 - episode / 500, 0.02)
                             obs, reward, done, info = play_one_step(env, obs, epsilon)
                             cumulative_reward += reward
                             if done:
                                 break
                         ###
 
-                        if episode > 50:  # and episode < int(2*eps/3)
-                            Q = training_step(batch_size, target)
+                        if episode > 50 and episode < 1000:
+                            training_step(batch_size, target)
                             if episode % target_update_freq == 0:
                                 target.set_weights(model.get_weights())
                         ep_rewards += [cumulative_reward]
+                        if episode % 200 == 0:
+                            print(np.mean(ep_rewards[50:]))
+                            np.save(f"runs/book/long_run250.npy",np.array(ep_rewards))
+                            model.save_weights("runs/book/weights/long_run250", overwrite=True)
 
                     # save the best hyperparameters
-                    rew_mean = round(np.mean(ep_rewards[50:]),3)
+                    rew_mean = np.mean(ep_rewards[50:])
                     rew_median = np.median(ep_rewards[50:], axis=0)
                     if rew_mean > gold_reward:
                         gold_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
                         gold_reward = rew_mean
-                        model.save_weights(f"runs/book/weights/best_weights{count}", overwrite=True)
                     elif rew_mean > silver_reward:
                         silver_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
                         silver_reward = rew_mean
                     elif rew_mean > bronze_reward:
                         bronze_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
                         bronze_reward = rew_mean
+
                     if rew_median > gold_median:
                         gold_median = rew_median
                         gold_med_hyperparam = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
-                    print(f"Best reward {gold_reward}, highest median {gold_median}")
-                    ticks = round((time.time()-start)/60,2)
-                    print(f"It took {ticks}mins.")
+                    print(f"best reward {gold_reward}, highest median {gold_median}")
                     print()
-                    np.save(f"runs/book/rew{count}.npy",np.array(ep_rewards))
-                    save = f"Test: {count}, params: {lr, batch_size,model_arch, target_update_freq, replay_buffer_size}"
-                    save += f"\nMean reward:{rew_mean}, median: {rew_median}\nTime:{ticks}\n\n"
-                    with open("runs/book/results/documentation.txt", 'a') as f:
-                        f.write(save)
+                    np.save(f"runs/book/long_run250.npy",np.array(ep_rewards))
+                    model.save_weights("runs/book/weights/long_run250", overwrite=True)
 
 
 print('best hyperparameters: ', gold_hyperparameters)

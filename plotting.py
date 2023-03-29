@@ -19,23 +19,22 @@ def simple_plot(y_vals, x_vals = None, file = None):
 args = sys.argv[1:]
 
 run = 1
-path = args[0]
-count = 0
+count = int(args[0])
 
 while True:
-    count += 1
     try:
-        rewards = np.load(f'{str(path)}{count}.npy')
+        count += 1
+        rewards = np.load(f'runs/book/rew{count}.npy')
     except:
         break
-
+    avg = round(np.mean(rewards[50:]),3)
     rewards_conv = np.mean(rewards.reshape(-1, 10), axis=1)
     median = np.median(rewards)
     plt.title(f"Experiment No.{count}")
     plt.plot(rewards)
     # plt.savefig(f"runs/book/plots/exp1_count{count}.pdf")
-    # plt.show()
+    plt.show()
     plt.title(f"Experiment No.{count} (convoluted)")
     plt.plot(rewards_conv)
-    # plt.show()
-    print(f'count {count}, median: {median}')
+    plt.show()
+    print(f'count {count}, average: {avg}, median: {median}')

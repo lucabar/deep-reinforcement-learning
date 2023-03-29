@@ -1,0 +1,18 @@
+DOCUMENTATION
+
+Test: 275, params: (0.0001, 32, 1, 100, 3000)
+Mean reward:53.482, median: 46.0
+Time:18.63
+
+Test: 276, params: (0.0001, 32, 1, 100, 5000)
+Mean reward:12.32, median: 11.0
+Time:3.49
+
+Test: 277, params: (0.0001, 32, 1, 500, 1000)
+Mean reward:12.16, median: 11.0
+Time:3.28
+
+Test: 278, params: (0.0001, 32, 1, 500, 3000)
+Mean reward:52.14, median: 48.0
+Time:15.29
+
