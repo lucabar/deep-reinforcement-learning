@@ -16,3 +16,15 @@ Test: 278, params: (0.0001, 32, 1, 500, 3000)
 Mean reward:52.14, median: 48.0
 Time:15.29
 
+Test: 279, params: (0.0001, 32, 1, 500, 5000)
+Mean reward:13.024, median: 12.0
+Time:3.83
+
+Test: 280, params: (0.0001, 32, 2, 10, 1000)
+Mean reward:13.078, median: 11.0
+Time:3.46
+
+Test: 281, params: (0.0001, 32, 2, 10, 3000)
+Mean reward:38.818, median: 34.0
+Time:11.58
+
