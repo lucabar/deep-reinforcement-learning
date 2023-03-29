@@ -1,2 +1,2 @@
-model_checkpoint_path: "best_weights278"
-all_model_checkpoint_paths: "best_weights278"
+model_checkpoint_path: "best_weights_long273"
+all_model_checkpoint_paths: "best_weights_long273"

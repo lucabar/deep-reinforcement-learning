@@ -27,32 +27,33 @@ env = gym.make("CartPole-v1")
 input_shape = [4] # == env.observation_space.shape
 n_outputs = 2 # == env.action_space.n
 
-def build_model(j: int = 1, activ: str = "elu"):
+def build_model(j: int = 1, activ: str = "elu", init: str = None):
+    init = "he_normal"  # <--- here?
     if j == 1:
         model = keras.models.Sequential([
         # use 64 neurons in only one layer
         # use 512, 256, 64
-        keras.layers.Dense(64, activation=activ, input_shape=input_shape),
+        keras.layers.Dense(64, activation=activ, input_shape=input_shape,kernel_initializer=init),
         #keras.layers.Dense(32, activation="elu"),
         keras.layers.Dense(n_outputs)
         # tune (output) activation relu or tanh maybe, output linear
         ])
     elif j == 2:
         model = tf.keras.Sequential([
-            tf.keras.layers.Dense(32, activation=activ, input_shape=(4,)),
+            tf.keras.layers.Dense(32, activation=activ, input_shape=(4,),kernel_initializer=init),
             tf.keras.layers.Dense(2)
         ])
     elif j == 3:
         model = tf.keras.Sequential([
-            tf.keras.layers.Dense(32, activation=activ, input_shape=(4,)),
-            tf.keras.layers.Dense(32, activation=activ),
+            tf.keras.layers.Dense(32, activation=activ, input_shape=(4,), kernel_initializer=init),
+            tf.keras.layers.Dense(32, activation=activ, kernel_initializer=init),
             tf.keras.layers.Dense(2)
         ])
     elif j == 4:
         model = tf.keras.Sequential([
-            tf.keras.layers.Dense(16, activation=activ, input_shape=(4,)),
-            tf.keras.layers.Dense(16, activation=activ),
-            tf.keras.layers.Dense(16, activation=activ),
+            tf.keras.layers.Dense(16, activation=activ, input_shape=(4,), kernel_initializer=init),
+            tf.keras.layers.Dense(16, activation=activ, kernel_initializer=init),
+            tf.keras.layers.Dense(16, activation=activ, kernel_initializer=init),
             tf.keras.layers.Dense(2)
         ])
     return model
@@ -133,7 +134,7 @@ for lr in learning_rates:
                 for replay_buffer_size in replay_buffer_sizes:
                     count +=1
                     ## skip first n runs, we already did them!
-                    if count < 273:
+                    if count != 273:
                         continue
                     print()
                     start = time.time()
@@ -143,17 +144,17 @@ for lr in learning_rates:
                     replay_buffer = deque(maxlen=replay_buffer_size)
                     model, optimizer, target = build(model_arch, lr)
                     ep_rewards = []
-                    eps = 500
+                    eps = 1000  # <--- here?
 
                     # model training
                     for episode in range(eps):
                         obs = env.reset()
-
+                        epsilon = max(1 - episode / 500, 0.02)  # idea: couple annealing epsilon not to ep count but reward?
+                        epsilon = max(1 - np.mean(ep_rewards)/200, epsilon)  # <--- here?
                         cumulative_reward = 0
 
                         ### one episode
                         for step in range(475):
-                            epsilon = max(1 - episode / 500, 0.02)  # idea: couple annealing epsilon not to ep count but reward?
                             obs, reward, done, info = play_one_step(env, obs, epsilon)
                             cumulative_reward += reward
                             if done:
@@ -164,6 +165,8 @@ for lr in learning_rates:
                             Q = training_step(batch_size, target)
                             if episode % target_update_freq == 0:
                                 target.set_weights(model.get_weights())
+                            if episode % 100 == 0:
+                                print(f"mean of last 100: {round(np.mean(ep_rewards[-100:]),3)}\n")
                         ep_rewards += [cumulative_reward]
 
                     # save the best hyperparameters
@@ -172,7 +175,7 @@ for lr in learning_rates:
                     if rew_mean > gold_reward:
                         gold_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
                         gold_reward = rew_mean
-                        model.save_weights(f"runs/book/weights/best_weights{count}", overwrite=True)
+                        model.save_weights(f"runs/book/weights/best_weights_long{count}", overwrite=True)
                     elif rew_mean > silver_reward:
                         silver_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
                         silver_reward = rew_mean
@@ -182,25 +185,28 @@ for lr in learning_rates:
                     if rew_median > gold_median:
                         gold_median = rew_median
                         gold_med_hyperparam = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
+
                     print(f"Best reward {gold_reward}, highest median {gold_median}")
                     ticks = round((time.time()-start)/60,2)
                     print(f"It took {ticks}mins.")
                     print()
-                    np.save(f"runs/book/rew{count}.npy",np.array(ep_rewards))
+                    np.save(f"runs/book/rew_long{count}.npy",np.array(ep_rewards))
                     save = f"Test: {count}, params: {lr, batch_size,model_arch, target_update_freq, replay_buffer_size}"
-                    save += f"\nMean reward:{rew_mean}, median: {rew_median}\nTime:{ticks}\n\n"
+                    save += f"\nMean reward:{rew_mean}, median: {rew_median}\nTime: {ticks}mins\n\n"
                     with open("runs/book/results/documentation.txt", 'a') as f:
                         f.write(save)
 
 
 print('best hyperparameters: ', gold_hyperparameters)
 print('best avg reward: ', gold_reward)
+try:
+    print('2nd hyperparameters: ', silver_hyperparameters)
+    print('2nd avg reward: ', silver_reward)
 
-print('2nd hyperparameters: ', silver_hyperparameters)
-print('2nd avg reward: ', silver_reward)
+    print('3rd hyperparameters: ', bronze_hyperparameters)
+    print('3rd avg reward: ', bronze_reward)
 
-print('3rd hyperparameters: ', bronze_hyperparameters)
-print('3rd avg reward: ', bronze_reward)
-
-print('best median: ', gold_median)
-print('best hyperparams (med): ', gold_med_hyperparam)
+    print('best median: ', gold_median)
+    print('best hyperparams (med): ', gold_med_hyperparam)
+except:
+    pass

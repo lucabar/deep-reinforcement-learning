@@ -27,7 +27,7 @@ while True:
         rewards = np.load(f'runs/book/rew{count}.npy')
     except:
         break
-    avg = round(np.mean(rewards[50:]),3)
+    avg = round(np.mean(rewards[-100:]),3)
     rewards_conv = np.mean(rewards.reshape(-1, 10), axis=1)
     median = np.median(rewards)
     plt.title(f"Experiment No.{count}")
@@ -37,4 +37,4 @@ while True:
     plt.title(f"Experiment No.{count} (convoluted)")
     plt.plot(rewards_conv)
     plt.show()
-    print(f'count {count}, average: {avg}, median: {median}')
+    print(f'count {count}, average last 100 eps: {avg}, median: {median}')
