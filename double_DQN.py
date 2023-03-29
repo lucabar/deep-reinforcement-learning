@@ -8,7 +8,7 @@ from collections import deque # for experience replay
 
 ### ideas
 ## hyperparameters
-replay_buffer = deque(maxlen=200) # default:2000 is the maximum number of transitions we want to store 
+replay_buffer = deque(maxlen=5000) # default:2000 is the maximum number of transitions we want to store 
 
 ## architecture 
 # try only one layer
@@ -16,10 +16,11 @@ replay_buffer = deque(maxlen=200) # default:2000 is the maximum number of transi
 # constants / initializations
 batch_size = 32
 discount_factor = 0.99
-optimizer = keras.optimizers.Adam(learning_rate=0.001)
+optimizer = keras.optimizers.Adam(learning_rate=0.0001)
 loss_fn = keras.losses.mean_squared_error
 total_rewards = []
 target_update_freq = 10
+
 
 env = gym.make("CartPole-v1")
 
@@ -84,6 +85,15 @@ def sample_experiences(batch_size):
         for field_index in range(5)]
     return states, actions, rewards, next_states, dones
 
+# introduce Prioritized Experience Replay
+def sample_experiences_prioritize(batch_size, beta=0.4):
+    
+    to_be_done = 'Here we need to sample the experiences based on the priorities'
+    
+    return 
+
+
+
 def training_step(batch_size, target):
     experiences = sample_experiences(batch_size)
     states, actions, rewards, next_states, dones = experiences
@@ -91,14 +101,30 @@ def training_step(batch_size, target):
     # --------------------- Double DQN --------------------- #
     # Now we use the online model to predict the Q-values and not the target model
     # This is due to the fact that the target network overestimates the Q-values
-    next_Q_values = model.predict(next_states, verbose=0) 
+    next_Q_values_onlinemodel = model.predict(next_states, verbose=0) 
+    next_Q_values_targetmodel = target.predict(next_states, verbose=0)
 
+    # select random one of the two models' outputs in order to avoid overestimation
+    random_choice = np.random.choice([1, 2], size=1)
+
+    if random_choice == 1:
+        next_Q_values = next_Q_values_onlinemodel
+    else:
+        next_Q_values = next_Q_values_targetmodel
+
+    # take the best predicted action of the randomly selected model
     best_next_actions = np.argmax(next_Q_values, axis=1)
-
-    
     
     next_mask = tf.one_hot(best_next_actions, n_outputs).numpy()
-    next_best_Q_values = (target.predict(next_states) * next_mask).sum(axis=1)
+
+    # not only find next actions based on the randomly selected model, but also use the randomly selected model to predict the Q-values
+    if random_choice == 1:
+        next_best_Q_values = (next_Q_values_onlinemodel * next_mask).sum(axis=1)
+    else:
+        next_best_Q_values = (next_Q_values_targetmodel * next_mask).sum(axis=1)
+    
+    # next_best_Q_values = (target.predict(next_states) * next_mask).sum(axis=1)
+
     target_Q_values = (rewards +
         (1 - dones) * discount_factor * next_best_Q_values)
     
@@ -106,7 +132,7 @@ def training_step(batch_size, target):
 # --------------------- Double DQN --------------------- #
 
     with tf.GradientTape() as tape:
-        all_Q_values = model(states)
+        all_Q_values = model(states)  # should this also change to random selection???
         Q_values = tf.reduce_sum(all_Q_values * mask, axis=1, keepdims=True)
         loss = tf.reduce_mean(loss_fn(target_Q_values, Q_values))
     grads = tape.gradient(loss, model.trainable_variables)
@@ -122,7 +148,7 @@ def play_one_step(env, state, epsilon):
 # Buiilding a double DQN model
 
 # Create the online model 
-model = build_model(2)
+model = build_model(3)
 
 # Create the target model
 target = keras.models.clone_model(model)
@@ -131,7 +157,7 @@ target = keras.models.clone_model(model)
 target.set_weights(model.get_weights())
 
 # model training
-eps = 300
+eps = 600
 ep_rewards = []
 for episode in range(eps):
     obs, info = env.reset()
@@ -152,6 +178,7 @@ for episode in range(eps):
         if episode % target_update_freq == 0:
             target.set_weights(model.get_weights())
     ep_rewards += [cumulative_reward]
+    print("Episode: {}, Reward: {}, Epsilon: {}".format(episode, cumulative_reward, epsilon))
 
 
 # print the average reward over the last 100 episodes
