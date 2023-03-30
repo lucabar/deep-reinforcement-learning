@@ -37,14 +37,14 @@ class Q_Network():
         self.learning_rate = learning_rate
         self.optimizer = tf.keras.optimizers.RMSprop(learning_rate=learning_rate)  # change this!
         self.batch_size = batch_size
-        a1, a2, a3, a4 = 0,0,0,1
+        a1, a2, a3, a4 = 1,0,0,0
         self.gamma = 0.99
+        activ = "elu"
 
         if a1:
-            self.model = tf.keras.Sequential([
-                tf.keras.layers.Dense(20, activation='relu', kernel_initializer='he_uniform', input_shape=(4,)),
-                tf.keras.layers.Dense(10, activation='relu', kernel_initializer='he_uniform'),
-                tf.keras.layers.Dense(2, activation='linear')
+            self.model = tf.keras.models.Sequential([
+                tf.keras.layers.Dense(64, activation=activ, input_shape=(4,),kernel_initializer='he_uniform'),
+                tf.keras.layers.Dense(2)
             ])
         elif a2:
             self.model = tf.keras.Sequential([
@@ -157,8 +157,8 @@ class DQN_Agent():
 
             
 
-def q_learning(max_eps: int, learning_rate: float = 0.001, epsilon: float = None, temp: float = None, 
-               optimizer: str = 'rmsprop', batch_size: int = 32, update_target_freq: int = 100,
+def q_learning(max_eps: int, learning_rate: float = 0.0001, epsilon: float = None, temp: float = None, 
+               optimizer: str = 'rmsprop', batch_size: int = 32, update_target_freq: int = 10,
                tn_active: bool =tn_active, er_active: bool=er_active, 
                budget: int = 10000, run: str = '1', save: bool = False):
     '''
@@ -250,4 +250,4 @@ def q_learning(max_eps: int, learning_rate: float = 0.001, epsilon: float = None
     return total_rewards
 
 if __name__ == "__main__":
-    rewards = q_learning(max_eps=300, learning_rate=0.001, epsilon=1, tn_active=tn_active, er_active=er_active, save=True)
+    rewards = q_learning(max_eps=600, learning_rate=0.0001, epsilon=1, tn_active=tn_active, er_active=er_active, save=True)

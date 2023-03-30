@@ -24,7 +24,7 @@ count = int(args[0])
 while True:
     try:
         count += 1
-        rewards = np.load(f'runs/book/rew{count}.npy')
+        rewards = np.load(f'runs/book/rew_long{count}.npy')
     except:
         break
     avg = round(np.mean(rewards[-100:]),3)

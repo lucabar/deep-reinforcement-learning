@@ -44,3 +44,15 @@ Test: 273, params: (0.0001, 32, 1, 10, 5000)
 Mean reward:17.481, median: 15.0
 Time: 4.14mins
 
+Test: 273, params: (0.0001, 32, 1, 10, 5000)
+Mean reward:23.137, median: 20.0
+Time: 3.41mins
+
+Test: 273, params: (0.0001, 32, 1, 10, 5000)
+Mean reward:102.941, median: 80.0
+Time: 81.95mins
+
+Test: 273, params: (0.0001, 32, 1, 10, 5000)
+Mean reward:19.891, median: 17.0
+Time: 1.74mins
+

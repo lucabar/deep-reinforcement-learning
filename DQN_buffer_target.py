@@ -144,7 +144,7 @@ for lr in learning_rates:
                     replay_buffer = deque(maxlen=replay_buffer_size)
                     model, optimizer, target = build(model_arch, lr)
                     ep_rewards = []
-                    eps = 1000  # <--- here?
+                    eps = 500  # <--- here?
 
                     # model training
                     for episode in range(eps):
@@ -175,7 +175,6 @@ for lr in learning_rates:
                     if rew_mean > gold_reward:
                         gold_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
                         gold_reward = rew_mean
-                        model.save_weights(f"runs/book/weights/best_weights_long{count}", overwrite=True)
                     elif rew_mean > silver_reward:
                         silver_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
                         silver_reward = rew_mean
@@ -185,6 +184,8 @@ for lr in learning_rates:
                     if rew_median > gold_median:
                         gold_median = rew_median
                         gold_med_hyperparam = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
+                    if rew_mean > 100:
+                        model.save_weights(f"runs/book/weights/weights_{count}_rew{rew_mean}.h5", overwrite=True)
 
                     print(f"Best reward {gold_reward}, highest median {gold_median}")
                     ticks = round((time.time()-start)/60,2)
