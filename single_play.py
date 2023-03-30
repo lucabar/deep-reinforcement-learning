@@ -109,7 +109,7 @@ replay_buffer = deque(maxlen=replay_buffer_size)
 
 ##### insert weight path
 # exist_weights = None  # activate when you want to learn
-exist_weights = "w_30_154727.h5"  # path to existing weights
+exist_weights = "try_next_w_30_164938.h5"  # path to existing weights
 exist_weights = "runs/book/weights/" + exist_weights
 #####
 
@@ -121,8 +121,8 @@ max_mean = 100
 try:
     for episode in range(eps):
         obs = env.reset()
-        epsilon = max(1 - episode / 500, 0.02)  # idea: couple annealing epsilon not to ep count but reward?
-        epsilon = 0.02
+        # epsilon = max(1 - episode / 500, 0.02)  # idea: couple annealing epsilon not to ep count but reward?
+        epsilon = 0.0
         # epsilon = max(1 - np.mean(ep_rewards)/200, epsilon)  # <--- here?
         cumulative_reward = 0
 
@@ -159,6 +159,8 @@ try:
             mean = round(np.mean(ep_rewards),3)
         if episode % 100 == 0 and episode > 50:
             print(f"Average of last 100: {mean}")
+        if episode % 20 == 0:
+            np.save(f"runs/book/rew_{stamp}.npy",np.array(ep_rewards))
 
         if  mean > max_mean and optimizer:
             max_mean = mean

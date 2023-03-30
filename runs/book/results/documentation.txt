@@ -187,3 +187,12 @@ FAILED!!
 ---Starting Test 30_164559---
 params:(0.0001, 32, 1, 10, 5000)
 Not learning, but playing...
+FAILED!!
+---Starting Test 30_164938---
+params:(0.0001, 32, 1, 10, 5000)
+again saving weights
+Not learning, but playing...
+FAILED!!
+---Starting Test 30_173334---
+params:(0.0001, 32, 1, 10, 5000)
+Not learning, but playing...
