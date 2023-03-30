@@ -175,12 +175,6 @@ for lr in learning_rates:
                     if rew_mean > gold_reward:
                         gold_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
                         gold_reward = rew_mean
-                    elif rew_mean > silver_reward:
-                        silver_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
-                        silver_reward = rew_mean
-                    elif rew_mean > bronze_reward:
-                        bronze_hyperparameters = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
-                        bronze_reward = rew_mean
                     if rew_median > gold_median:
                         gold_median = rew_median
                         gold_med_hyperparam = (lr, model_arch, batch_size, target_update_freq, replay_buffer_size)
@@ -191,23 +185,13 @@ for lr in learning_rates:
                     ticks = round((time.time()-start)/60,2)
                     print(f"It took {ticks}mins.")
                     print()
-                    np.save(f"runs/book/rew_long{count}.npy",np.array(ep_rewards))
+                    np.save(f"runs/book/rew{count}.npy",np.array(ep_rewards))
                     save = f"Test: {count}, params: {lr, batch_size,model_arch, target_update_freq, replay_buffer_size}"
                     save += f"\nMean reward:{rew_mean}, median: {rew_median}\nTime: {ticks}mins\n\n"
                     with open("runs/book/results/documentation.txt", 'a') as f:
                         f.write(save)
 
-
 print('best hyperparameters: ', gold_hyperparameters)
 print('best avg reward: ', gold_reward)
-try:
-    print('2nd hyperparameters: ', silver_hyperparameters)
-    print('2nd avg reward: ', silver_reward)
-
-    print('3rd hyperparameters: ', bronze_hyperparameters)
-    print('3rd avg reward: ', bronze_reward)
-
-    print('best median: ', gold_median)
-    print('best hyperparams (med): ', gold_med_hyperparam)
-except:
-    pass
+print('best median: ', gold_median)
+print('best hyperparams (med): ', gold_med_hyperparam)

@@ -13,8 +13,8 @@ import h5py
 loss_fn = keras.losses.mean_squared_error
 env = gym.make("CartPole-v1")
 
-def build_model(j: int = 1, activ: str = "elu", init: str = None):
-    init = "he_normal"  # <--- here?
+def build_model(j: int = 1, activ: str = "elu", init: str = "glorot_uniform"):
+    # init = "he_normal"  # <--- here?
     input_shape = [4] # == env.observation_space.shape
     n_outputs = 2 # == env.action_space.n
     if j == 1:
@@ -108,8 +108,9 @@ print(outp)
 replay_buffer = deque(maxlen=replay_buffer_size)
 
 ##### insert weight path
-exist_weights = None  # activate when you want to learn
-# exist_weights = "_weights_273_rew102.941"  # path to existing weights
+# exist_weights = None  # activate when you want to learn
+exist_weights = "w_30_154727.h5"  # path to existing weights
+exist_weights = "runs/book/weights/" + exist_weights
 #####
 
 model, optimizer, target = build(arch, learning_rate, exist_weights)
@@ -121,6 +122,7 @@ try:
     for episode in range(eps):
         obs = env.reset()
         epsilon = max(1 - episode / 500, 0.02)  # idea: couple annealing epsilon not to ep count but reward?
+        epsilon = 0.02
         # epsilon = max(1 - np.mean(ep_rewards)/200, epsilon)  # <--- here?
         cumulative_reward = 0
 
@@ -133,7 +135,7 @@ try:
         ###
         # model training when no existing weight path is given
         if episode > 50 and optimizer:  # and episode < int(2*eps/3)
-            if episode == 51:
+            if episode % 50 == 0:
                 prnt = "We're now learning..."
                 outp += "\n"+ prnt
                 print(prnt)
@@ -149,13 +151,17 @@ try:
                 prnt = "Not learning, but playing..."
                 outp += "\n"+ prnt
                 print(prnt)
+
         ep_rewards += [cumulative_reward]
         try:
-            mean = np.mean(ep_rewards[-100:])
+            mean = round(np.mean(ep_rewards[-100:]),3)
         except:
-            mean = np.mean(ep_rewards)
+            mean = round(np.mean(ep_rewards),3)
+        if episode % 100 == 0 and episode > 50:
+            print(f"Average of last 100: {mean}")
 
-        if  mean > max_mean:
+        if  mean > max_mean and optimizer:
+            max_mean = mean
             prnt = "again saving weights"
             print(prnt)
             outp += "\n"+prnt
@@ -170,7 +176,6 @@ try:
     outp += "\n"+ prnt +"\n"
     print(prnt)
 
-    np.save(f"runs/book/rew_{stamp}.npy",np.array(ep_rewards))
     prnt= f"\nMean reward:{rew_mean}, median: {rew_median}\nTime: {ticks}mins\n\n"
     print(prnt)
     outp += prnt
@@ -179,6 +184,7 @@ except:
     print("something went wrong")
 
 finally:
+    np.save(f"runs/book/rew_{stamp}.npy",np.array(ep_rewards))
     with open("runs/book/results/documentation.txt", 'a') as f:
         # export comand line output for later investigation
         f.write("\nFAILED!!\n"+outp)
