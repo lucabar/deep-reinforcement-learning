@@ -68,112 +68,173 @@ mean of last 100: 38.02
 mean of last 100: 54.26
 
 mean of last 100: 70.89
+Test: 283, params: (0.0001, 32, 2, 100, 1000)
+Mean reward:18.784, median: 16.0
+Time: 1.18mins
 
-FAILED!!
----Starting Test 30_150702---
-params:(0.0001, 32, 1, 10, 5000)
-We're now learning...
-mean of last 100: 19.08
+Test: 284, params: (0.0001, 32, 2, 100, 3000)
+Mean reward:18.504, median: 16.0
+Time: 1.18mins
 
-mean of last 100: 14.57
+Test: 285, params: (0.0001, 32, 2, 100, 5000)
+Mean reward:21.869, median: 19.0
+Time: 1.37mins
 
-mean of last 100: 12.71
+Test: 286, params: (0.0001, 32, 2, 500, 1000)
+Mean reward:19.527, median: 17.0
+Time: 1.18mins
 
-mean of last 100: 10.79
+Test: 287, params: (0.0001, 32, 2, 500, 3000)
+Mean reward:26.731, median: 23.0
+Time: 1.9mins
 
-It took 4.42mins.
+Test: 288, params: (0.0001, 32, 2, 500, 5000)
+Mean reward:31.598, median: 27.0
+Time: 2.3mins
 
-Mean reward:12.636, median: 11.0
-Time: 4.42mins
+Test: 289, params: (0.0001, 32, 3, 10, 1000)
+Mean reward:20.153, median: 18.0
+Time: 1.23mins
 
+Test: 290, params: (0.0001, 32, 3, 10, 3000)
+Mean reward:19.14, median: 17.0
+Time: 1.19mins
 
-FAILED!!
----Starting Test 30_151352---
-params:(0.0001, 32, 1, 10, 5000)
-We're now learning...
-mean of last 100: 19.62
+Test: 291, params: (0.0001, 32, 3, 10, 5000)
+Mean reward:21.976, median: 18.0
+Time: 1.32mins
 
-mean of last 100: 14.37
+Test: 292, params: (0.0001, 32, 3, 100, 1000)
+Mean reward:19.544, median: 17.0
+Time: 1.17mins
 
-FAILED!!
----Starting Test 30_151518---
-params:(0.0001, 32, 1, 10, 5000)
-We're now learning...
-mean of last 100: 20.27
+Test: 293, params: (0.0001, 32, 3, 100, 3000)
+Mean reward:19.218, median: 16.0
+Time: 1.21mins
 
-mean of last 100: 14.26
+Test: 294, params: (0.0001, 32, 3, 100, 5000)
+Mean reward:27.062, median: 23.0
+Time: 2.03mins
 
-mean of last 100: 12.13
+Test: 295, params: (0.0001, 32, 3, 500, 1000)
+Mean reward:20.18, median: 17.0
+Time: 1.2mins
 
-mean of last 100: 10.7
+Test: 296, params: (0.0001, 32, 3, 500, 3000)
+Mean reward:19.284, median: 17.0
+Time: 1.19mins
 
-It took 3.98mins.
+Test: 297, params: (0.0001, 32, 3, 500, 5000)
+Mean reward:28.02, median: 23.0
+Time: 2.15mins
 
-Mean reward:12.329, median: 11.0
-Time: 3.98mins
+Test: 298, params: (0.0001, 64, 1, 10, 1000)
+Mean reward:18.84, median: 16.0
+Time: 1.17mins
 
+Test: 299, params: (0.0001, 64, 1, 10, 3000)
+Mean reward:19.602, median: 17.0
+Time: 1.16mins
 
-FAILED!!
----Starting Test 30_152019---
-params:(0.0001, 32, 1, 10, 5000)
-We're now learning...
-mean of last 100: 27.89
+Test: 300, params: (0.0001, 64, 1, 10, 5000)
+Mean reward:30.744, median: 25.0
+Time: 2.47mins
 
-mean of last 100: 47.2
+Test: 301, params: (0.0001, 64, 1, 100, 1000)
+Mean reward:18.798, median: 16.0
+Time: 1.16mins
 
-mean of last 100: 69.39
+Test: 302, params: (0.0001, 64, 1, 100, 3000)
+Mean reward:29.553, median: 24.0
+Time: 2.41mins
 
-mean of last 100: 90.11
+Test: 303, params: (0.0001, 64, 1, 100, 5000)
+Mean reward:23.02, median: 20.0
+Time: 1.56mins
 
-again saving weights
-It took 25.1mins.
+Test: 304, params: (0.0001, 64, 1, 500, 1000)
+Mean reward:23.427, median: 19.0
+Time: 1.43mins
 
-Mean reward:82.642, median: 66.0
-Time: 25.1mins
+Test: 305, params: (0.0001, 64, 1, 500, 3000)
+Mean reward:29.698, median: 24.0
+Time: 2.18mins
 
+Test: 306, params: (0.0001, 64, 1, 500, 5000)
+Mean reward:18.784, median: 16.0
+Time: 1.17mins
 
-FAILED!!
----Starting Test 30_154727---
-params:(0.0001, 32, 1, 10, 5000)
-Not learning, but playing...
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-again saving weights
-It took 30.56mins.
+Test: 307, params: (0.0001, 64, 2, 10, 1000)
+Mean reward:27.136, median: 23.0
+Time: 1.92mins
 
-Mean reward:77.164, median: 59.0
-Time: 30.56mins
+Test: 308, params: (0.0001, 64, 2, 10, 3000)
+Mean reward:21.7, median: 18.0
+Time: 1.42mins
 
+Test: 309, params: (0.0001, 64, 2, 10, 5000)
+Mean reward:27.707, median: 23.5
+Time: 2.35mins
+
+Test: 310, params: (0.0001, 64, 2, 100, 1000)
+Mean reward:19.811, median: 16.5
+Time: 1.22mins
+
+Test: 311, params: (0.0001, 64, 2, 100, 3000)
+Mean reward:29.476, median: 24.0
+Time: 2.21mins
+
+Test: 312, params: (0.0001, 64, 2, 100, 5000)
+Mean reward:29.802, median: 25.0
+Time: 2.29mins
+
+Test: 313, params: (0.0001, 64, 2, 500, 1000)
+Mean reward:26.384, median: 23.0
+Time: 1.72mins
+
+Test: 314, params: (0.0001, 64, 2, 500, 3000)
+Mean reward:26.538, median: 23.0
+Time: 1.85mins
+
+Test: 315, params: (0.0001, 64, 2, 500, 5000)
+Mean reward:19.522, median: 17.0
+Time: 1.2mins
+
+Test: 316, params: (0.0001, 64, 3, 10, 1000)
+Mean reward:32.329, median: 26.0
+Time: 2.51mins
+
+Test: 317, params: (0.0001, 64, 3, 10, 3000)
+Mean reward:21.058, median: 18.0
+Time: 1.33mins
+
+Test: 318, params: (0.0001, 64, 3, 10, 5000)
+Mean reward:23.709, median: 20.0
+Time: 1.61mins
+
+Test: 319, params: (0.0001, 64, 3, 100, 1000)
+Mean reward:22.418, median: 19.0
+Time: 1.48mins
+
+Test: 320, params: (0.0001, 64, 3, 100, 3000)
+Mean reward:19.402, median: 17.0
+Time: 1.18mins
+
+Test: 321, params: (0.0001, 64, 3, 100, 5000)
+Mean reward:23.344, median: 19.0
+Time: 1.63mins
+
+Test: 322, params: (0.0001, 64, 3, 500, 1000)
+Mean reward:24.28, median: 20.0
+Time: 1.62mins
+
+Test: 323, params: (0.0001, 64, 3, 500, 3000)
+Mean reward:19.573, median: 17.0
+Time: 1.25mins
+
+Test: 324, params: (0.0001, 64, 3, 500, 5000)
+Mean reward:29.213, median: 25.0
+Time: 2.36mins
 
 FAILED!!
 ---Starting Test 30_162543---
