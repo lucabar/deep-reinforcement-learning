@@ -100,6 +100,24 @@ def linear_anneal(t, T, start, final, percentage):
     else:
         return final + (start - final) * (final_from_T - t)/final_from_T
 
+def find_best_reward():
+    first = 0
+    med_first = 0
+    for count in range(285):
+        try:
+            rewards = np.load(f'runs/book/rew{count}.npy')
+        except:
+            continue
+        
+        avg = round(np.mean(rewards[50:]),3)
+        median = np.median(rewards[50:])
+        if avg > first:
+            print(f"Reward: {avg} at count: {count}")
+            first = avg
+        if median > med_first:
+            print(f"Median: {median} at count: {count}")
+            med_first = median
+
 
 if __name__ == '__main__':
     # Test Learning curve plot

@@ -114,7 +114,8 @@ exist_weights = None  # activate when you want to learn
 
 model, optimizer, target = build(arch, learning_rate, exist_weights)
 ep_rewards = []
-eps = 1000  # <--- here?
+eps = 500  # <--- here?
+max_mean = 100
 
 try:
     for episode in range(eps):
@@ -149,16 +150,20 @@ try:
                 outp += "\n"+ prnt
                 print(prnt)
         ep_rewards += [cumulative_reward]
+        try:
+            mean = np.mean(ep_rewards[-100:])
+        except:
+            mean = np.mean(ep_rewards)
+
+        if  mean > max_mean:
+            prnt = "again saving weights"
+            print(prnt)
+            outp += "\n"+prnt
+            model.save_weights(f"runs/book/weights/w_{stamp}.h5", overwrite=True)
 
     # save the best hyperparameters
     rew_mean = round(np.mean(ep_rewards[50:]),3)
     rew_median = np.median(ep_rewards[50:], axis=0)
-
-    if rew_mean > 100:
-        prnt = "again saving weights"
-        print(prnt)
-        outp += "\n"+prnt
-        model.save_weights(f"runs/book/weights/w_{stamp}.h5", overwrite=True)
 
     ticks = round((time.time()-start)/60,2)
     prnt = f"It took {ticks}mins."
@@ -171,6 +176,9 @@ try:
     outp += prnt
 
 except:
+    print("something went wrong")
+
+finally:
     with open("runs/book/results/documentation.txt", 'a') as f:
         # export comand line output for later investigation
         f.write("\nFAILED!!\n"+outp)
