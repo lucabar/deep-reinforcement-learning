@@ -21,7 +21,7 @@ args = sys.argv[1:]
 run = 1
 count = 0
 
-while count < 2:
+while count < 1:
     try:
         count += 1
         rewards = np.load(f'runs/book/{args[0]}')
@@ -31,7 +31,8 @@ while count < 2:
     # rewards_conv = np.mean(rewards.reshape(-1, 10), axis=1)
     median = np.median(rewards)
     plt.title(f"Experiment No.{count}")
-    plt.plot(rewards)
+    plt.scatter(np.arange(1,len(rewards)+1,1),rewards)
+    plt.axhline(50)
     # plt.savefig(f"runs/book/plots/exp1_count{count}.pdf")
     plt.show()
     plt.title(f"Experiment No.{count} (convoluted)")
