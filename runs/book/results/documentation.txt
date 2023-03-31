@@ -262,3 +262,178 @@ FAILED!!
 ---Starting Test 30_174641---
 params:(0.0001, 32, 1, 10, 5000)
 Not learning, but playing...
+FAILED!!
+---Starting Test 31_083931---
+params:(0.0001, 32, 1, 10, 5000)
+We're now learning...
+mean of last 100: 19.33
+
+We're now learning...
+We're now learning...
+mean of last 100: 18.05
+
+We're now learning...
+We're now learning...
+mean of last 100: 18.09
+
+We're now learning...
+We're now learning...
+mean of last 100: 18.21
+
+We're now learning...
+It took 1.43mins.
+
+Mean reward:18.838, median: 16.0
+Time: 1.43mins
+
+
+FAILED!!
+---Starting Test 31_084135---
+params:(0.0001, 32, 1, 10, 5000)
+We're now learning...Average of last 100: 46.28Average of last 100: 34.72Average of last 100: 32.79Average of last 100: 37.07
+It took 4.01mins.
+
+Mean reward:35.227, median: 30.0
+Time: 4.01mins
+
+
+FAILED!!
+---Starting Test 31_094908---
+params:(0.0001, 32, 1, 10, 5000)
+We're now learning...Average of last 100: 19.38Average of last 100: 18.57Average of last 100: 17.08Average of last 100: 19.03
+It took 1.41mins.
+
+Mean reward:18.504, median: 16.0
+Time: 1.41mins
+
+
+FAILED!!
+---Starting Test 31_101233---
+params:(0.0001, 32, 1, 10, 5000)
+again saving weights
+We're now learning...Average of last 100: 37.97Average of last 100: 33.63Average of last 100: 31.57Average of last 100: 31.88
+It took 4.13mins.
+
+Mean reward:32.791, median: 28.0
+Time: 4.13mins
+
+
+FAILED!!
+---Starting Test 31_101737---
+params:(0.0001, 32, 1, 10, 5000)
+We're now learning...Average of last 100: 26.76Average of last 100: 26.56Average of last 100: 27.2Average of last 100: 27.88
+It took 2.63mins.
+
+Mean reward:27.06, median: 24.0
+Time: 2.63mins
+
+
+FAILED!!
+---Starting Test 31_102042---
+params:(0.0001, 32, 3, 10, 5000)
+We're now learning...Average of last 100: 19.09Average of last 100: 19.62Average of last 100: 19.61Average of last 100: 18.37
+It took 1.58mins.
+
+Mean reward:19.209, median: 17.0
+Time: 1.58mins
+
+
+FAILED!!
+---Starting Test 31_102311---
+params:(0.0001, 32, 3, 10, 5000)
+We're now learning...Average of last 100: 19.16Average of last 100: 18.11Average of last 100: 19.41Average of last 100: 20.08
+It took 1.41mins.
+
+Mean reward:19.467, median: 17.0
+Time: 1.41mins
+
+
+FAILED!!
+---Starting Test 31_102449---
+params:(0.0001, 32, 3, 10, 5000)
+We're now learning...Average of last 100: 18.2Average of last 100: 19.19Average of last 100: 20.21Average of last 100: 17.88
+It took 1.5mins.
+
+Mean reward:19.28, median: 17.0
+Time: 1.5mins
+
+
+FAILED!!
+---Starting Test 31_102636---
+params:(0.0001, 32, 3, 10, 5000)
+FAILED!!
+---Starting Test 31_102709---
+params:(0.0001, 32, 4, 10, 5000)
+again saving weights
+again saving weights
+FAILED!!
+---Starting Test 31_103044---
+params:(0.0001, 32, 4, 10, 5000)
+We're now learning...Average of last 100: 19.48Average of last 100: 19.35Average of last 100: 19.04
+FAILED!!
+---Starting Test 31_103212---
+params:(0.0001, 32, 4, 10, 5000)
+We're now learning...Average of last 100: 21.08Average of last 100: 18.6Average of last 100: 19.8Average of last 100: 20.23
+It took 1.52mins.
+
+Mean reward:19.718, median: 17.0
+Time: 1.52mins
+
+
+FAILED!!
+---Starting Test 31_103357---
+params:(0.0001, 32, 4, 10, 5000)
+We're now learning...Average of last 100: 20.48Average of last 100: 18.45Average of last 100: 19.14Average of last 100: 20.94
+It took 1.42mins.
+
+Mean reward:19.462, median: 17.0
+Time: 1.42mins
+
+
+FAILED!!
+---Starting Test 31_103546---
+params:(0.0001, 32, 4, 10, 5000)
+We're now learning...Average of last 100: 21.78Average of last 100: 22.49Average of last 100: 21.58Average of last 100: 20.45
+It took 1.72mins.
+
+Mean reward:21.478, median: 18.0
+Time: 1.72mins
+
+
+FAILED!!
+---Starting Test 31_104012---
+params:(0.0001, 32, 4, 10, 5000)
+We're now learning...Average of last 100: 21.53Average of last 100: 22.8Average of last 100: 18.79Average of last 100: 20.27
+It took 3.46mins.
+
+Mean reward:20.771, median: 18.0
+Time: 3.46mins
+
+
+FAILED!!
+---Starting Test 31_104447---
+params:(0.0001, 32, 4, 10, 5000)
+We're now learning...Average of last 100: 22.4Average of last 100: 20.32
+FAILED!!
+---Starting Test 31_104728---
+params:(0.0001, 32, 4, 10, 5000)
+We're now learning...Average of last 100: 21.58Average of last 100: 16.32Average of last 100: 13.56Average of last 100: 11.09
+It took 9.04mins.
+
+Mean reward:13.689, median: 12.0
+Time: 9.04mins
+
+
+FAILED!!
+---Starting Test 31_110201---
+params:(0.0001, 32, 4, 10, 5000)
+We're now learning...Average of last 100: 30.15Average of last 100: 30.63Average of last 100: 30.1Average of last 100: 27.82
+It took 19.09mins.
+
+Mean reward:28.444, median: 16.0
+Time: 19.09mins
+
+
+FAILED!!
+---Starting Test 31_115510---
+params:(0.0001, 32, 1, 10, 5000)

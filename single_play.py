@@ -13,7 +13,8 @@ import h5py
 loss_fn = keras.losses.mean_squared_error
 env = gym.make("CartPole-v1")
 
-def build_model(j: int = 1, activ: str = "elu", init: str = "glorot_uniform"):
+
+def build_model(j: int = 1, activ: str = "relu", init: str = "glorot_uniform"):
     # init = "he_normal"  # <--- here?
     input_shape = [4] # == env.observation_space.shape
     n_outputs = 2 # == env.action_space.n
@@ -29,17 +30,17 @@ def build_model(j: int = 1, activ: str = "elu", init: str = "glorot_uniform"):
         ])
     elif j == 3:
         model = tf.keras.Sequential([
-            tf.keras.layers.Dense(32, activation=activ, input_shape=(4,), kernel_initializer=init),
+            tf.keras.layers.Dense(64, activation=activ, input_shape=(4,), kernel_initializer=init),
             tf.keras.layers.Dense(32, activation=activ, kernel_initializer=init),
             tf.keras.layers.Dense(2)
         ])
     elif j == 4:
         model = tf.keras.Sequential([
-            tf.keras.layers.Dense(16, activation=activ, input_shape=(4,), kernel_initializer=init),
-            tf.keras.layers.Dense(16, activation=activ, kernel_initializer=init),
-            tf.keras.layers.Dense(16, activation=activ, kernel_initializer=init),
+            tf.keras.layers.Dense(64, activation=activ, input_shape=(4,), kernel_initializer=init),
+            tf.keras.layers.Dense(64, activation=activ, kernel_initializer=init),
             tf.keras.layers.Dense(2)
         ])
+    model.summary()
     return model
 
 def build(arch: int = 1, lr: float = 0.0001, exist_model: str = None):
@@ -92,7 +93,7 @@ def play_one_step(env, state, epsilon):
     return next_state, reward, done, info
 
 ## hyperparameters
-learning_rate, batch_size, arch, target_update_freq, replay_buffer_size = (0.0001, 32, 1, 10, 5000)
+learning_rate, batch_size, arch, target_update_freq, replay_buffer_size = (0.0001, 32, 4, 10, 5000)
 
 discount_factor = 0.95
 # iterate over all hyperparameters
@@ -108,9 +109,9 @@ print(outp)
 replay_buffer = deque(maxlen=replay_buffer_size)
 
 ##### insert weight path
-# exist_weights = None  # activate when you want to learn
-exist_weights = "try_next_w_30_164938.h5"  # path to existing weights
-exist_weights = "runs/book/weights/" + exist_weights
+exist_weights = None  # activate when you want to learn
+# exist_weights = "try_next_w_30_164938.h5"  # path to existing weights
+# exist_weights = "runs/book/weights/" + exist_weights
 #####
 
 model, optimizer, target = build(arch, learning_rate, exist_weights)
@@ -121,9 +122,12 @@ max_mean = 100
 try:
     for episode in range(eps):
         obs = env.reset()
-        # epsilon = max(1 - episode / 500, 0.02)  # idea: couple annealing epsilon not to ep count but reward?
-        epsilon = 0.0
-        # epsilon = max(1 - np.mean(ep_rewards)/200, epsilon)  # <--- here?
+        if optimizer:
+            epsilon = max(1 - episode / 500, 0.02)
+            #epsilon = max(1 - np.mean(ep_rewards)/200, 0.01)  # idea: couple annealing epsilon not to ep count but reward?
+        else:  # not learning, not exploring, just greedy
+            epsilon = 0.0
+
         cumulative_reward = 0
 
         ### one episode
@@ -132,25 +136,21 @@ try:
             cumulative_reward += reward
             if done:
                 break
-        ###
-        # model training when no existing weight path is given
-        if episode > 50 and optimizer:  # and episode < int(2*eps/3)
-            if episode % 50 == 0:
-                prnt = "We're now learning..."
-                outp += "\n"+ prnt
-                print(prnt)
-            Q = training_step(batch_size, target)
-            if episode % target_update_freq == 0:
-                target.set_weights(model.get_weights())
-            if episode % 100 == 0:
-                prnt =f"mean of last 100: {round(np.mean(ep_rewards[-100:]),3)}\n"
-                outp += "\n"+ prnt
-                print(prnt)
-        else:
-            if episode == 51:
-                prnt = "Not learning, but playing..."
-                outp += "\n"+ prnt
-                print(prnt)
+            # model training when no existing weight path is given
+            if episode > 50 and optimizer:
+                if episode == 51:
+                    prnt = "We're now learning..."
+                    outp += "\n"+ prnt
+                    print(prnt)
+                Q = training_step(batch_size, target)
+                if episode % target_update_freq == 0:
+                    target.set_weights(model.get_weights())
+            else:
+                if episode == 51:
+                    prnt = "Not learning, but playing..."
+                    outp += "\n"+ prnt
+                    print(prnt)
+        ### end of episode
 
         ep_rewards += [cumulative_reward]
         try:
@@ -158,11 +158,14 @@ try:
         except:
             mean = round(np.mean(ep_rewards),3)
         if episode % 100 == 0 and episode > 50:
+            prnt = f"Average of last 100: {mean}"
+            outp += prnt
             print(f"Average of last 100: {mean}")
         if episode % 20 == 0:
             np.save(f"runs/book/rew_{stamp}.npy",np.array(ep_rewards))
 
         if  mean > max_mean and optimizer:
+            # run without learning
             max_mean = mean
             prnt = "again saving weights"
             print(prnt)
