@@ -103,7 +103,7 @@ def training_step(batch_size, target):
 
 def play_one_step(env, state, epsilon):
     action = epsilon_greedy_policy(state, epsilon)
-    next_state, reward, done, info = env.step(action)
+    next_state, reward, done, trunc, info = env.step(action)
     replay_buffer.append((state, action, reward, next_state, done))
     return next_state, reward, done, info
 
@@ -134,7 +134,7 @@ for lr in learning_rates:
                 for replay_buffer_size in replay_buffer_sizes:
                     count +=1
                     ## skip first n runs, we already did them!
-                    if count != 273:
+                    if count <= 246 or count >= 250:
                         continue
                     print()
                     start = time.time()
@@ -148,7 +148,7 @@ for lr in learning_rates:
 
                     # model training
                     for episode in range(eps):
-                        obs = env.reset()
+                        obs, info = env.reset()
                         epsilon = max(1 - episode / 500, 0.02)  # idea: couple annealing epsilon not to ep count but reward?
                         epsilon = max(1 - np.mean(ep_rewards)/200, epsilon)  # <--- here?
                         cumulative_reward = 0

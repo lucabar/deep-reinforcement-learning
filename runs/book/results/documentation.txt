@@ -236,3 +236,23 @@ Test: 324, params: (0.0001, 64, 3, 500, 5000)
 Mean reward:29.213, median: 25.0
 Time: 2.36mins
 
+Test: 245, params: (0.0001, 16, 1, 10, 3000)
+Mean reward:25.829, median: 22.0
+Time: 1.84mins
+
+Test: 246, params: (0.0001, 16, 1, 10, 5000)
+Mean reward:20.798, median: 18.0
+Time: 1.24mins
+
+Test: 247, params: (0.0001, 16, 1, 100, 1000)
+Mean reward:27.109, median: 24.0
+Time: 1.86mins
+
+Test: 248, params: (0.0001, 16, 1, 100, 3000)
+Mean reward:19.74, median: 17.0
+Time: 1.23mins
+
+Test: 249, params: (0.0001, 16, 1, 100, 5000)
+Mean reward:29.602, median: 25.0
+Time: 2.26mins
+
