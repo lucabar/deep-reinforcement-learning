@@ -261,3 +261,22 @@ FAILED!!
 ---Starting Test 30_174641---
 params:(0.0001, 32, 1, 10, 5000)
 Not learning, but playing...
+FAILED!!
+---Starting Test 31_125639---
+params:(0.0001, 32, 1, 10, 5000)
+We're now learning...Average of last 50: 29.26Average of last 50: 37.16Average of last 50: 41.62Average of last 50: 45.68Average of last 50: 51.44Average of last 50: 66.72Average of last 50: 77.64Average of last 50: 78.1
+It took 46.14mins.
+
+Mean reward:55.791, median: 45.0
+Time: 46.14mins
+
+
+FAILED!!
+---Starting Test 31_141629---
+params:(0.0001, 32, 4, 10, 5000)
+We're now learning...Average of last 50: 9.3Average of last 50: 9.34
+It took 2.3mins.
+
+Mean reward:9.253, median: 9.0
+Time: 2.3mins
+

@@ -32,7 +32,7 @@ while count < 1:
     median = np.median(rewards)
     plt.title(f"Experiment No.{count}")
     plt.plot(rewards)
-    plt.axhline(50)
+    plt.axhline(50, color='red')
     # plt.savefig(f"runs/book/plots/exp1_count{count}.pdf")
     plt.show()
     plt.title(f"Experiment No.{count} (convoluted)")
