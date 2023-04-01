@@ -66,6 +66,27 @@ def build_model(j: int = 1, activ: str = "elu", init: str = None):
                                   ),
             tf.keras.layers.Dense(2)
         ])
+    elif j == 'Dueling':
+        K = keras.backend
+        
+        input_states = keras.layers.Input(shape=input_shape)
+        hidden1 = keras.layers.Dense(32, activation="elu")(input_states)
+        hidden2 = keras.layers.Dense(32, activation="elu")(hidden1)
+
+        # This creates a fully connected layer with a single neuron and no activation function, which will output the estimated state value for the input state.
+        state_values = keras.layers.Dense(1)(hidden2)
+        
+        # This creates another fully connected layer with n_outputs neurons and no activation function, which will output the raw advantage estimates for each action.
+        raw_advantages = keras.layers.Dense(n_outputs)(hidden2)
+        
+        # This calculates the advantages by subtracting the maximum advantage estimate from each estimate, which helps to stabilize the learning process.
+        advantages = raw_advantages - K.max(raw_advantages, axis=1, keepdims=True)
+        
+        # This combines the state values and advantages to compute the Q-values for each action.
+        Q_values = state_values + advantages
+
+        # now the model has two outputs, one for the state values and one for the advantages. 
+        model = keras.Model(inputs=[input_states], outputs=[Q_values])
     return model
 
 

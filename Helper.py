@@ -49,11 +49,12 @@ def smooth(y, window, poly=1):
     return savgol_filter(y, window, poly)
 
 
-def softmax(x, temp):
+def softmax(temp, state, network):
     ''' Computes the softmax of vector x with temperature parameter 'temp' '''
-    x = x / temp  # scale by temperature
+    s_tensor = make_tensor(state, False)
+    x = network.model.predict(s_tensor, verbose=0)
     z = x - max(x)  # substract max to prevent overflow of softmax
-    return np.exp(z)/np.sum(np.exp(z))  # compute softmax
+    return np.argmax(np.exp(z)/np.sum(np.exp(z)))  # compute softmax
 
 
 def argmax(x):
@@ -78,9 +79,11 @@ def stable_loss(target, pred):  # implement own loss on stable target
     return tf.reduce_mean(squared_difference, axis=-1)  # Note the `axis=-1`
 
 
-def e_greedy(Q_vals, epsilon):
+def e_greedy(epsilon, state, network):
     ''' epsilon greedy policy '''
     if np.random.uniform(0., 1) > epsilon:
+        s_tensor = make_tensor(state, False)
+        Q_vals = network.model.predict(s_tensor, verbose=0)  # outputs two Q-values
         return np.argmax(Q_vals)
     else:
         return np.random.randint(0, 2)

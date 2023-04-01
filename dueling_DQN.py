@@ -30,32 +30,29 @@ n_outputs = 2 # == env.action_space.n
 
 def build_model(j: int = 1, activ: str = "elu"):
     if j == 1:
-        model = keras.models.Sequential([
-        # use 64 neurons in only one layer
-        # use 512, 256, 64
-        keras.layers.Dense(64, activation=activ, input_shape=input_shape),
-        #keras.layers.Dense(32, activation="elu"),
-        keras.layers.Dense(n_outputs)
-        # tune (output) activation relu or tanh maybe, output linear
-        ])
-    elif j == 2:
-        model = tf.keras.Sequential([
-            tf.keras.layers.Dense(32, activation=activ, input_shape=(4,)),
-            tf.keras.layers.Dense(2)
-        ])
-    elif j == 3:
-        model = tf.keras.Sequential([
-            tf.keras.layers.Dense(32, activation=activ, input_shape=(4,)),
-            tf.keras.layers.Dense(32, activation=activ),
-            tf.keras.layers.Dense(2)
-        ])
-    elif j == 4:
-        model = tf.keras.Sequential([
-            tf.keras.layers.Dense(16, activation=activ, input_shape=(4,)),
-            tf.keras.layers.Dense(16, activation=activ),
-            tf.keras.layers.Dense(16, activation=activ),
-            tf.keras.layers.Dense(2)
-        ])
+        # -------------------------- Dueling DQN --------------------------------
+
+        # This imports the Keras backend, which provides access to low-level operations in TensorFlow.
+        K = keras.backend
+        
+        input_states = keras.layers.Input(shape=input_shape)
+        hidden1 = keras.layers.Dense(32, activation="elu")(input_states)
+        hidden2 = keras.layers.Dense(32, activation="elu")(hidden1)
+
+        # This creates a fully connected layer with a single neuron and no activation function, which will output the estimated state value for the input state.
+        state_values = keras.layers.Dense(1)(hidden2)
+        
+        # This creates another fully connected layer with n_outputs neurons and no activation function, which will output the raw advantage estimates for each action.
+        raw_advantages = keras.layers.Dense(n_outputs)(hidden2)
+        
+        # This calculates the advantages by subtracting the maximum advantage estimate from each estimate, which helps to stabilize the learning process.
+        advantages = raw_advantages - K.max(raw_advantages, axis=1, keepdims=True)
+        
+        # This combines the state values and advantages to compute the Q-values for each action.
+        Q_values = state_values + advantages
+
+        # now the model has two outputs, one for the state values and one for the advantages. 
+        model = keras.Model(inputs=[input_states], outputs=[Q_values])
     return model
 
 
@@ -98,19 +95,27 @@ def training_step(batch_size, target):
     experiences = sample_experiences(batch_size)
     states, actions, rewards, next_states, dones = experiences
 
-    # --------------------- Double DQN --------------------- #
-    # Now we use the online model to predict the Q-values and not the target model
-    # This is due to the fact that the target network overestimates the Q-values
+    # --------------------- Dueling DQN --------------------- #
+    # The concept of advantage is used to calculate the Q-values
+    # In a Dueling DQN, the model estimates both the value of the state
+    # and the advantage of each possible action.
+
+    experiences = sample_experiences(batch_size)
+    states, actions, rewards, next_states, dones = experiences
+
+    next_Q_values = target.predict(next_states)
+    max_next_Q_values = np.max(next_Q_values, axis=1, keepdims=True)
+    target_Q_values = (rewards + (1 - dones) * discount_factor * max_next_Q_values)
+
+  
+
     
-   
-    next_Q_values = model.predict(next_states)
-    best_next_actions = np.argmax(next_Q_values, axis=1)
-    next_mask = tf.one_hot(best_next_actions, n_outputs).numpy()
-    next_best_Q_values = (target.predict(next_states) * next_mask).sum(axis=1)
-    target_Q_values = (rewards +
-    (1 - dones) * discount_factor * next_best_Q_values)
+
     mask = tf.one_hot(actions, n_outputs)
-# --------------------- Double DQN --------------------- #
+ 
+   
+    
+# --------------------- Dueling DQN --------------------- #
 
     with tf.GradientTape() as tape:
         all_Q_values = model(states)  # should this also change to random selection???
@@ -129,7 +134,7 @@ def play_one_step(env, state, epsilon):
 # Buiilding a double DQN model
 
 # Create the online model 
-model = build_model(3)
+model = build_model(1)
 
 # Create the target model
 target = keras.models.clone_model(model)
