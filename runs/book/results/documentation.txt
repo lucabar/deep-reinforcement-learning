@@ -256,6 +256,103 @@ Test: 249, params: (0.0001, 16, 1, 100, 5000)
 Mean reward:29.602, median: 25.0
 Time: 2.26mins
 
+<<<<<<< HEAD
+Test: 74, params: (0.1, 64, 3, 10, 3000)
+Mean reward:20.929, median: 18.0
+Time: 1.35mins
+
+Test: 111, params: (0.01, 32, 1, 10, 5000)
+Mean reward:22.791, median: 19.0
+Time: 1.52mins
+
+
+FAILED!!
+---Starting Test 31_140126---
+params:(0.0001, 32, 1, 10, 5000)
+We're now learning...Average of last 50: 31.78Average of last 50: 31.88Average of last 50: 26.28Average of last 50: 16.74Average of last 50: 13.52Average of last 50: 10.54Average of last 50: 9.32Average of last 50: 9.22
+It took 8.79mins.
+
+Mean reward:17.691, median: 12.0
+Time: 8.79mins
+
+
+FAILED!!
+---Starting Test 31_141119---
+params:(0.0001, 32, 1, 10, 5000)
+We're now learning...Average of last 50: 17.62Average of last 50: 15.3Average of last 50: 13.96Average of last 50: 13.2Average of last 50: 11.5Average of last 50: 10.24Average of last 50: 9.82Average of last 50: 9.48
+It took 6.6mins.
+
+Mean reward:12.333, median: 11.0
+Time: 6.6mins
+
+
+FAILED!!
+---Starting Test 31_141937---
+params:(0.0001, 32, 1, 5, 5000)
+We're now learning...Average of last 50: 26.24Average of last 50: 27.84Average of last 50: 25.02Average of last 50: 18.82Average of last 50: 13.6Average of last 50: 11.48Average of last 50: 10.44Average of last 50: 9.88
+It took 8.66mins.
+
+Mean reward:16.984, median: 12.0
+Time: 8.66mins
+
+
+FAILED!!
+---Starting Test 31_143032---
+params:(0.0001, 32, 1, 10, 5000)
+We're now learning...Average of last 50: 16.28Average of last 50: 13.5Average of last 50: 13.36Average of last 50: 11.62Average of last 50: 10.6Average of last 50: 9.96Average of last 50: 9.26Average of last 50: 9.34
+It took 7.16mins.
+
+Mean reward:11.48, median: 10.0
+Time: 7.16mins
+
+
+FAILED!!
+---Starting Test 31_145426---
+params:(0.0001, 32, 4, 10, 5000)
+We're now learning...Average of last 50: 20.18Average of last 50: 17.72Average of last 50: 17.0Average of last 50: 16.62Average of last 50: 16.78Average of last 50: 17.08Average of last 50: 22.7Average of last 50: 18.28
+It took 9.21mins.
+
+Mean reward:17.398, median: 15.0
+Time: 9.21mins
+
+
+FAILED!!
+---Starting Test 31_152349---
+params:(0.0001, 32, 4, 10, 5000)
+We're now learning...Average of last 50: 23.08Average of last 50: 22.24Average of last 50: 20.14Average of last 50: 24.24Average of last 50: 27.82Average of last 50: 25.12Average of last 50: 19.26Average of last 50: 20.16Average of last 50: 20.52Average of last 50: 14.14Average of last 50: 39.78Average of last 50: 40.84Average of last 50: 14.7Average of last 50: 13.14Average of last 50: 42.76Average of last 50: 56.32Average of last 50: 29.34
+It took 16.17mins.
+
+Mean reward:28.258, median: 16.0
+Time: 16.17mins
+
+Test: 273, params: (0.0001, 32, 1, 10, 5000)
+Mean reward:22.416, median: 19.0
+Time: 1.58mins
+
+Test: 0, params: (0.0001, 32, 1, 10, 5000)
+Mean reward:40.584, median: 36.0
+Time: 9.12mins
+
+Test: 1, params: (0.0001, 32, 1, 10, 5000)
+Mean reward:32.962, median: 33.0
+Time: 7.81mins
+
+Test: 1, params: (0.0001, 32, 1, 10, 5000)
+Mean reward:19.029, median: 16.0
+Time: 2.85mins
+
+Test: 1, params: (0.0001, 32, 1, 10, 5000)
+Mean reward:82.331, median: 76.5
+Time: 26.65mins
+
+Test: 1, params: (0.0001, 32, 1, 10, 5000)
+Mean reward:16.56, median: 13.0
+Time: 5.57mins
+
+Test: 4, params: (0.0001, 32, 4, 10, 5000)
+Mean reward:34.722, median: 26.0
+Time: 42.87mins
+=======
 
 FAILED!!
 ---Starting Test 30_174641---
@@ -590,6 +687,7 @@ It took 6.55mins.
 
 Mean reward:9.418, median: 9.0
 Time: 6.55mins
+>>>>>>> 7c36ec5b5b460ffbaebde0458d3c613e24a4b2ed
 
 
 FAILED!!

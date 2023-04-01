@@ -5,7 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sys
 
-def simple_plot(y_vals, x_vals = None, file = None):
+
+def simple_plot(y_vals, x_vals=None, file=None):
     if x_vals:
         plt.plot(x_vals, y_vals)
     else:

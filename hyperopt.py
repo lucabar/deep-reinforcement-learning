@@ -58,35 +58,15 @@ def build_model(j: int = 1, activ: str = "elu", init: str = None):
         ])
     elif j == 4:
         model = tf.keras.Sequential([
-            tf.keras.layers.Dense(16, activation=activ,
+            tf.keras.layers.Dense(64, activation=activ,
                                   input_shape=(4,), kernel_initializer=init),
-            tf.keras.layers.Dense(16, activation=activ
-                                  ),
-            tf.keras.layers.Dense(16, activation=activ
-                                  ),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Dropout(0.2),
+            tf.keras.layers.Dense(64, activation=activ),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Dropout(0.2),
             tf.keras.layers.Dense(2)
         ])
-    elif j == 'Dueling':
-        K = keras.backend
-        
-        input_states = keras.layers.Input(shape=input_shape)
-        hidden1 = keras.layers.Dense(32, activation="elu")(input_states)
-        hidden2 = keras.layers.Dense(32, activation="elu")(hidden1)
-
-        # This creates a fully connected layer with a single neuron and no activation function, which will output the estimated state value for the input state.
-        state_values = keras.layers.Dense(1)(hidden2)
-        
-        # This creates another fully connected layer with n_outputs neurons and no activation function, which will output the raw advantage estimates for each action.
-        raw_advantages = keras.layers.Dense(n_outputs)(hidden2)
-        
-        # This calculates the advantages by subtracting the maximum advantage estimate from each estimate, which helps to stabilize the learning process.
-        advantages = raw_advantages - K.max(raw_advantages, axis=1, keepdims=True)
-        
-        # This combines the state values and advantages to compute the Q-values for each action.
-        Q_values = state_values + advantages
-
-        # now the model has two outputs, one for the state values and one for the advantages. 
-        model = keras.Model(inputs=[input_states], outputs=[Q_values])
     return model
 
 
@@ -160,12 +140,12 @@ bronze_reward = 0
 gold_median = 0
 
 # iterate over all hyperparameters
-count = 1
+count = 0
 
 print("hyperparams: learning rate, batch_size, model_arch, target_update_freq, replay_buffer_size")
 
 lr, batch_size, model_arch, target_update_freq, replay_buffer_size = (
-    0.0001, 32, 1, 10, 5000)
+    0.0001, 32, 4, 10, 5000)
 
 
 start = time.time()
@@ -181,31 +161,34 @@ epsilon_initial = 0.4
 
 epsilon = epsilon_initial
 # model training
-for episode in range(eps):
-    obs, info = env.reset()
-    # idea: couple annealing epsilon not to ep count but reward?
-    # epsilon = max(1 - episode / 500, 0.02)
-    # epsilon = max(1 - np.mean(ep_rewards)/200, epsilon)  # <--- here?
-    if episode > 100:
+for epsilon_initial in [0.8, 0.6, 0.4, 0.2]:
+    count += 1
+    for episode in range(eps):
+        obs, info = env.reset()
+        # idea: couple annealing epsilon not to ep count but reward?
+        # epsilon = max(1 - episode / 500, 0.02)
+        # epsilon = max(1 - np.mean(ep_rewards)/200, epsilon)  # <--- here?
+
         epsilon = linear_anneal(episode, eps, epsilon_initial, 0.01, 1)
 
-    cumulative_reward = 0
+        cumulative_reward = 0
 
-    # one episode
-    for step in range(475):
-        obs, reward, done, trunc, info = play_one_step(env, obs, epsilon)
-        cumulative_reward += reward
-        if done or trunc:
-            break
-    ###
+        # one episode
+        for step in range(475):
+            obs, reward, done, trunc, info = play_one_step(env, obs, epsilon)
+            cumulative_reward += reward
+            if done or trunc:
+                break
+        ###
 
-    if episode > 50:  # and episode < int(2*eps/3)
-        Q = training_step(batch_size, target)
-        if episode % target_update_freq == 0:
-            target.set_weights(model.get_weights())
-        if episode % 50 == 0:
-            print(f"mean of last 50: {round(np.mean(ep_rewards[-50:]),3)}\n")
-    ep_rewards += [cumulative_reward]
+        if episode > 50:  # and episode < int(2*eps/3)
+            Q = training_step(batch_size, target)
+            if episode % target_update_freq == 0:
+                target.set_weights(model.get_weights())
+            if episode % 50 == 0:
+                print(
+                    f"mean of last 50: {round(np.mean(ep_rewards[-50:]),3)}\n")
+        ep_rewards += [cumulative_reward]
 
 # save the best hyperparameters
 rew_mean = round(np.mean(ep_rewards[50:]), 3)
