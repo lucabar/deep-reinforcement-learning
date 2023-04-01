@@ -33,10 +33,10 @@ except:
     exit()
 
 avg = round(np.mean(rewards[-50:]),3)
-# rewards_conv = np.mean(rewards.reshape(-1, 10), axis=1)
 median = np.median(rewards)
 plt.title(f"Experiment No.{count}")
-# plt.plot(np.mean(rewards,axis=0))
+if "mean" in args:
+    rewards = np.mean(rewards,axis=0)
 plt.plot(rewards)
 plt.axhline(50, color='red')
 # plt.savefig(f"runs/book/plots/exp1_count{count}.pdf")

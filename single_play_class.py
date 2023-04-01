@@ -6,10 +6,12 @@ import time
 from collections import deque # for experience replay
 from Helper import make_tensor, e_greedy, softmax, linear_anneal
 import matplotlib.pyplot as plt
+import sys
+
 
 class Q_Network():
     '''General deep Q Network'''
-    def __init__(self, learning_rate: float = 0.0001, optimizer: str = 'adam', architecture: int = 4, 
+    def __init__(self, learning_rate: float = 0.0001, optimizer: str = 'adam', architecture = 4, 
                  path_to_weights: str = None, batch_size: int = 32, target_active: bool = True, is_target: bool = False):
         self.learning_rate = learning_rate
         self.architecture = architecture
@@ -17,7 +19,8 @@ class Q_Network():
         self.update_count = 0
         self.target_active = target_active
         activ = "elu"
-        init = "he_normal"
+        self.seed = 42
+        init = tf.keras.initializers.HeNormal(seed=self.seed)
         self.loss_fn = keras.losses.mean_squared_error
         self.path_to_weights = path_to_weights
         self.optimizer = optimizer
@@ -110,11 +113,7 @@ class DQN_Agent():
         self.policy = policy
         self.batch_size = batch_size
         self.replay_active = replay_active
-
         self.buffer = deque(maxlen=max_buffer)
-
-        self.states, self.actions, self.rewards, self.n_states, self.dones = [], [], [] , [], []
-        self.sample = []  # init not really needed, just for overview of attributes
 
     def draw_action(self, state, network: Q_Network):
         '''
@@ -171,16 +170,20 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
     env = gym.make("CartPole-v1")
 
     ep_rewards = []
-    max_mean = 80
+    max_mean = 60
     budget = 0
 
 
     for episode in range(eps):
         state, info = env.reset()
 
-        agent.epsilon = max(1 - episode / 500, 0.05)
-        # agent.epsilon = linear_anneal(episode, eps, agent.epsilon_initial, 0.01, 0.7)
-        # epsilon = max(1 - np.mean(ep_rewards)/200, 0.01)  # idea: couple annealing epsilon not to ep count but reward?
+        # agent.epsilon = max(1 - episode / 500, 0.05)
+        agent.epsilon = linear_anneal(episode, eps, agent.epsilon_initial, 0.01, 0.5)
+        """ try:
+            agent.epsilon = max(1 - np.mean(ep_rewards[-50:])/80, agent.epsilon)  # idea: couple annealing epsilon not to ep count but reward?
+        except:
+            agent.epsilon = max(1 - np.mean(ep_rewards)/100, agent.epsilon)
+        """
         cumulative_reward = 0
 
         #### episode starts
@@ -261,15 +264,28 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
 
     with open("runs/book/results/documentation.txt", 'a') as f:
         # export comand line output for later investigation
-        f.write("\nFAILED!!\n"+outp)
-
+        f.write("\n"+outp)
     env.close()
     return ep_rewards
 
 
 if __name__ == "__main__":
-    eps = 1000
-    n_runs = 1
+    args = sys.argv[1:]
+    target_active, replay_active = False, False
+
+    try:
+        for arg in args:
+            if arg == "--target_active":
+                target_active = True
+                print("Target network active...")
+            elif arg == "--experience_replay":
+                replay_active = True
+                print("Experience replay active...")
+    except:
+        pass
+
+    eps = 400
+    n_runs = 5
 
     all_rewards = np.empty([n_runs,eps])
 
@@ -290,7 +306,7 @@ if __name__ == "__main__":
     architectures = [4]
     freqs = [10]
     buffer_sizes = [5000]
-    epsilons = [0.3]
+    epsilons = [0.4]
     temp = 1.
 
     for run in range(n_runs):
@@ -300,7 +316,7 @@ if __name__ == "__main__":
                     for replay_buffer_size in buffer_sizes:
                         rewards = learning(eps, learning_rate, batch_size, architecture=arch, target_update_freq=target_update_freq, 
                                         replay_buffer_size=replay_buffer_size, policy=policy, epsilon=epsilon, 
-                                        path_to_weights=path_to_weights, temp=temp)
+                                        path_to_weights=path_to_weights, temp=temp,replay_active=replay_active,target_active=target_active)
                         #np.save(f'runs/book/rew_a{arch}_f{target_update_freq}_b{replay_buffer_size}_e{epsilon}',rewards)
 
         all_rewards[run] = rewards
