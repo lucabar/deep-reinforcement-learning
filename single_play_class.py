@@ -150,11 +150,11 @@ class DQN_Agent():
 
 
 def learning(eps, learning_rate, batch_size, architecture, target_update_freq, replay_buffer_size, policy: str = 'epsilon', 
-             epsilon: float = 0.02, temp: float = 1., path_to_weights: str = None, replay_active: bool = True, target_active: bool = True):
+             epsilon: float = 0.2, temp: float = 1., path_to_weights: str = None, replay_active: bool = True, target_active: bool = True):
 
     start = time.time()
     stamp = time.strftime("%d_%H%M%S",time.gmtime(start))
-    outp = f"---Starting Test {stamp}---\nparams:{learning_rate, batch_size, architecture, target_update_freq, replay_buffer_size}"
+    outp = f"---Starting Test {stamp}---\nparams:{learning_rate, batch_size, architecture, target_update_freq, replay_buffer_size, epsilon}"
     print(outp)
 
     network = Q_Network(learning_rate,'adam',architecture,path_to_weights=path_to_weights, target_active=target_active)
@@ -171,14 +171,14 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
     env = gym.make("CartPole-v1")
 
     ep_rewards = []
-    max_mean = 30
+    max_mean = 80
     budget = 0
 
 
     for episode in range(eps):
         state, info = env.reset()
 
-        agent.epsilon = max(1 - episode / 500, 0.01)
+        agent.epsilon = max(1 - episode / 500, 0.05)
         # agent.epsilon = linear_anneal(episode, eps, agent.epsilon_initial, 0.01, 0.7)
         # epsilon = max(1 - np.mean(ep_rewards)/200, 0.01)  # idea: couple annealing epsilon not to ep count but reward?
         cumulative_reward = 0
@@ -196,6 +196,7 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
 
             if done:
                 break
+
         #### episode is over
         # model training when no existing weight path is given
         if episode > 50 and network.learning:
@@ -267,32 +268,33 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
 
 
 if __name__ == "__main__":
-    eps = 500
+    eps = 1000
     n_runs = 1
 
     all_rewards = np.empty([n_runs,eps])
 
-    ## hyperparameters
-    # architectures (incl activation and initialization)
-    # epsilon
-    # target_update_freq
-    # buffer_size
+    training = True
 
-    policy = "softmax"
-    temps = [0.5,1,10]
+    policy = "epsilon"
+    temps = [0.5]
     path_to_weights = None
-    # w/out training
-    # path_to_weights= "insane_start_w_01_112419.h5"
-    # policy = "greedy"
 
+    # w/out training
+    if not training:
+        path_to_weights = "insane_start_w_01_112419.h5"
+        path_to_weights = "w_01_143105.h5"
+        policy = "greedy"
+
+    ## hyperparameters
     learning_rate, batch_size, arch, target_update_freq, replay_buffer_size = (0.0001, 32, 1, 10, 5000)
-    architectures = [1]
+    architectures = [4]
     freqs = [10]
     buffer_sizes = [5000]
-    epsilon = 1.
+    epsilons = [0.3]
+    temp = 1.
 
     for run in range(n_runs):
-        for temp in temps:
+        for epsilon in epsilons:
             for arch in architectures:
                 for target_update_freq in freqs:
                     for replay_buffer_size in buffer_sizes:
