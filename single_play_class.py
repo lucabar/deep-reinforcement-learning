@@ -10,17 +10,19 @@ import matplotlib.pyplot as plt
 class Q_Network():
     '''General deep Q Network'''
     def __init__(self, learning_rate: float = 0.0001, optimizer: str = 'adam', architecture: int = 4, 
-                 path_to_weights: str = None, batch_size: int = 32, target_active: bool = True):
+                 path_to_weights: str = None, batch_size: int = 32, target_active: bool = True, is_target: bool = False):
         self.learning_rate = learning_rate
         self.architecture = architecture
         self.gamma = 0.99
         self.update_count = 0
+        self.target_active = target_active
         activ = "elu"
-        init = "glorot_uniform"
+        init = "he_normal"
         self.loss_fn = keras.losses.mean_squared_error
         self.path_to_weights = path_to_weights
         self.optimizer = optimizer
         self.batch_size = batch_size
+        self.is_target = is_target
 
         if architecture == 1:
             self.model = tf.keras.models.Sequential([
@@ -35,7 +37,7 @@ class Q_Network():
         elif architecture == 3:
             self.model = tf.keras.Sequential([
             tf.keras.layers.Dense(64, activation=activ, input_shape=(4,), kernel_initializer=init),
-            tf.keras.layers.Dense(32, activation=activ, kernel_initializer=init),
+            tf.keras.layers.Dense(32, activation=activ),
             tf.keras.layers.Dense(2)
             ])
         elif architecture == 4:
@@ -43,39 +45,43 @@ class Q_Network():
             tf.keras.layers.Dense(64, activation=activ, input_shape=(4,), kernel_initializer=init),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.Dropout(0.3),
-            tf.keras.layers.Dense(64, activation=activ, kernel_initializer=init),
+            tf.keras.layers.Dense(64, activation=activ),
             tf.keras.layers.BatchNormalization(),
             tf.keras.layers.Dropout(0.3),
             tf.keras.layers.Dense(2)
             ])
 
         if path_to_weights:
-            self.model.load_weights(path_to_weights)
+            print("using pre-trained weights")
+            self.learning = False
+            full_path_to_weights = "runs/book/weights/" + path_to_weights
+            self.model.load_weights(full_path_to_weights)
         else:
+            self.learning = True
             self.optimizer = keras.optimizers.Adam(learning_rate=self.learning_rate)
             self.model.compile(self.optimizer, self.loss_fn)
-        
-        self.model.summary()
+        if not self.is_target:
+            self.model.summary()
     
     def update(self, states, actions, rewards, dones, target_output):
         self.update_count += 1
         max_next_Q_values = np.max(target_output, axis=1)
         target_Q_values = (rewards +
                             (1 - dones) * self.gamma * max_next_Q_values)
+
+        # self.model.fit(states, target_Q_values, batch_size=self.batch_size, verbose=0)
+
         mask = tf.one_hot(actions, 2)
-        
-        self.model.fit(states, target_Q_values, batch_size=self.batch_size, verbose=0)
-        
-        # with tf.GradientTape() as tape:
-        #     all_Q_values = self.model(states)
-        #     Q_values = tf.reduce_sum(all_Q_values * mask, axis=1, keepdims=True)
-        #     loss = tf.reduce_mean(self.loss_fn(target_Q_values, Q_values))
-        # grads = tape.gradient(loss, self.model.trainable_variables)
-        # self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+        with tf.GradientTape() as tape:
+            all_Q_values = self.model(states)
+            Q_values = tf.reduce_sum(all_Q_values * mask, axis=1, keepdims=True)
+            loss = tf.reduce_mean(self.loss_fn(target_Q_values, Q_values))
+        grads = tape.gradient(loss, self.model.trainable_variables)
+        self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
 
 class DQN_Agent():
     '''Class for the learning and playing agent'''
-    def __init__(self, batch_size: int = 32, replay: bool = True, epsilon: float = 0.02, temp: float = 1, max_buffer: int = int(1e3), 
+    def __init__(self, batch_size: int = 32, epsilon: float = 0.02, temp: float = 1, max_buffer: int = int(1e3), 
                  policy: str = 'epsilon', replay_active: bool = True):
         self.epsilon = epsilon
         self.epsilon_initial = epsilon
@@ -84,14 +90,12 @@ class DQN_Agent():
         self.batch_size = batch_size
         self.replay_active = replay_active
 
-        if replay:
-            self.replay = replay
-            self.buffer = deque(maxlen=max_buffer)
+        self.buffer = deque(maxlen=max_buffer)
 
         self.states, self.actions, self.rewards, self.n_states, self.dones = [], [], [] , [], []
         self.sample = []  # init not really needed, just for overview of attributes
 
-    def draw_action(self, state, q_network: Q_Network):
+    def draw_action(self, state, network: Q_Network):
         '''
         input: 
         - s: (4dim) state of environment
@@ -99,14 +103,13 @@ class DQN_Agent():
         - int 0 or 1, action according to QNet and policy
         no learning is happening here '''
 
-        s_tensor = make_tensor(state, False)
-        Q_vals = q_network.model.predict(s_tensor, verbose=0)  # outputs two Q-values
-
         if self.policy == 'epsilon':
-            return e_greedy(Q_vals, epsilon=self.epsilon)
+            return e_greedy(self.epsilon, state, network)
         elif self.policy == 'softmax':
-            return softmax(Q_vals, temp=self.temp)
+            return softmax(self.temp, state, network)
         elif self.policy == 'greedy':
+            s_tensor = make_tensor(state, False)
+            Q_vals = network.model.predict(s_tensor, verbose=0)  # outputs two Q-values
             return np.argmax(Q_vals)
 
     def draw_sample(self):
@@ -114,7 +117,7 @@ class DQN_Agent():
         if self.replay_active:
             indices = np.random.randint(len(self.buffer), size=self.batch_size)
         else:
-            indices = np.arange(len(self.buffer))
+            indices = np.arange(-self.batch_size,0,1)
         batch = [self.buffer[index] for index in indices]
         states, actions, rewards, next_states, dones = [
             np.array([experience[field_index] for experience in batch])
@@ -125,8 +128,8 @@ class DQN_Agent():
         self.buffer.append((state, action, reward, next_state, done))
 
 
-def learning(eps, learning_rate, batch_size, architecture, target_update_freq, replay_buffer_size, policy: str = 'epsilon',
-             path_to_weights: str = None, replay_active: bool = True, target_active: bool = True):
+def learning(eps, learning_rate, batch_size, architecture, target_update_freq, replay_buffer_size, policy: str = 'epsilon', 
+             epsilon: float = 0.02, temp: float = 1., path_to_weights: str = None, replay_active: bool = True, target_active: bool = True):
 
     start = time.time()
     stamp = time.strftime("%d_%H%M%S",time.gmtime(start))
@@ -134,22 +137,27 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
     print(outp)
 
     network = Q_Network(learning_rate,'adam',architecture,path_to_weights=path_to_weights, target_active=target_active)
-    target = Q_Network()
+    target = Q_Network(is_target=True)
     target.model = tf.keras.models.clone_model(network.model)
     target.model.set_weights(network.model.get_weights())
-    agent = DQN_Agent(batch_size, replay=True, epsilon=1, max_buffer=replay_buffer_size, policy=policy, replay_active=replay_active)
+
+    if not network.learning:  # when path to weights is given, we exploit fully
+        policy = 'greedy'
+
+    agent = DQN_Agent(batch_size, epsilon=epsilon, temp=temp, max_buffer=replay_buffer_size, policy=policy, replay_active=replay_active)
 
     # start the environment
     env = gym.make("CartPole-v1")
 
     ep_rewards = []
-    max_mean = 80
+    max_mean = 30
     budget = 0
 
 
     for episode in range(eps):
         state, info = env.reset()
-        agent.epsilon = max(1 - episode / 500, 0.02)
+
+        agent.epsilon = max(1 - episode / 500, 0.01)
         # agent.epsilon = linear_anneal(episode, eps, agent.epsilon_initial, 0.01, 0.7)
         # epsilon = max(1 - np.mean(ep_rewards)/200, 0.01)  # idea: couple annealing epsilon not to ep count but reward?
         cumulative_reward = 0
@@ -169,7 +177,7 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
                 break
         #### episode is over
         # model training when no existing weight path is given
-        if episode > 50:
+        if episode > 50 and network.learning:
             if episode == 51:
                 prnt = "We're now learning..."
                 outp += "\n"+ prnt
@@ -180,12 +188,14 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
             target_output = target.model.predict(next_states, verbose=0)
             network.update(states, actions, rewards, dones, target_output)
 
-            # update target
-            if network.update_count % target_update_freq == 0:
+            # update target (every episode when target network is False)
+            if not network.target_active:
+                target.model.set_weights(network.model.get_weights())
+            elif network.update_count % target_update_freq == 0:
                 target.model.set_weights(network.model.get_weights())
 
-        elif not network.optimizer:
-            if episode == 51:
+        elif not network.learning:
+            if episode == 0:
                 prnt = "Not learning, but playing..."
                 outp += "\n"+ prnt
                 print(prnt)
@@ -203,13 +213,12 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
             outp += prnt
             print(prnt)
 
-        if episode % 20 == 0:
-            np.save(f"runs/book/rew_{stamp}.npy",np.array(ep_rewards))
+        if episode % 10 == 0:
+            np.save(f"runs/book/rew_{stamp}.npy", np.array(ep_rewards))
 
-        if  mean > max_mean and network.path_to_weights:
-            # run without learning
+        if  mean > max_mean and network.learning:
             max_mean = mean
-            prnt = "again saving weights"
+            prnt = "Saving weights..."
             print(prnt)
             outp += "\n"+prnt
             network.model.save_weights(f"runs/book/weights/w_{stamp}.h5", overwrite=True)
@@ -228,23 +237,19 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
     print(prnt)
     outp += prnt
 
-    # except:
-    #     print("something went wrong")
-
-    # finally:
-    #     np.save(f"runs/book/rew_{stamp}.npy",np.array(ep_rewards))
     with open("runs/book/results/documentation.txt", 'a') as f:
         # export comand line output for later investigation
         f.write("\nFAILED!!\n"+outp)
 
+    env.close()
     return ep_rewards
 
 
 if __name__ == "__main__":
-    eps = 200
+    eps = 500
     n_runs = 1
 
-    all_rewards = np.array((n_runs,eps))
+    all_rewards = np.empty([n_runs,eps])
 
     ## hyperparameters
     # architectures (incl activation and initialization)
@@ -252,17 +257,31 @@ if __name__ == "__main__":
     # target_update_freq
     # buffer_size
 
+    policy = "softmax"
+    temps = [0.5,1,10]
+    path_to_weights = None
+    # w/out training
+    # path_to_weights= "insane_start_w_01_112419.h5"
+    # policy = "greedy"
+
     learning_rate, batch_size, arch, target_update_freq, replay_buffer_size = (0.0001, 32, 1, 10, 5000)
-    architectures = [4]  #[4,3]
-    freqs = [10]  #[10, 500, 1000]
-    buffer_sizes = [5000]  #[500, 1000, 5000]
+    architectures = [1]
+    freqs = [10]
+    buffer_sizes = [5000]
+    epsilon = 1.
 
     for run in range(n_runs):
-        for arch in architectures:
-            for target_update_freq in freqs:
-                for replay_buffer_size in buffer_sizes:
-                    rewards = learning(eps, learning_rate, batch_size, architecture=arch, target_update_freq=target_update_freq, 
-                                       replay_buffer_size=replay_buffer_size, policy='epsilon')
-                    np.save(f'runs/book/rew_a{arch}_f{target_update_freq}_b{replay_buffer_size}', rewards)
+        for temp in temps:
+            for arch in architectures:
+                for target_update_freq in freqs:
+                    for replay_buffer_size in buffer_sizes:
+                        rewards = learning(eps, learning_rate, batch_size, architecture=arch, target_update_freq=target_update_freq, 
+                                        replay_buffer_size=replay_buffer_size, policy=policy, epsilon=epsilon, 
+                                        path_to_weights=path_to_weights, temp=temp)
+                        #np.save(f'runs/book/rew_a{arch}_f{target_update_freq}_b{replay_buffer_size}_e{epsilon}',rewards)
+
         all_rewards[run] = rewards
-    plt.plot(np.mean(all_rewards,axis=0))
+        plt.plot(rewards)
+    stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
+    plt.savefig(f"runs/book/experiment_{stamp}.pdf")
+    np.save(f"runs/book/experiment_{stamp}", all_rewards)

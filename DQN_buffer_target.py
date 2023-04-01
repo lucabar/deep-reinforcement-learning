@@ -134,7 +134,7 @@ for lr in learning_rates:
                 for replay_buffer_size in replay_buffer_sizes:
                     count +=1
                     ## skip first n runs, we already did them!
-                    if count <= 246 or count >= 250:
+                    if count < 270 or count > 280:
                         continue
                     print()
                     start = time.time()
