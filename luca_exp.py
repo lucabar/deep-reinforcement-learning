@@ -19,7 +19,7 @@ print("Target network: ", target_active)
 print("Experience Replay: ", replay_active)
 
 eps = 500
-n_runs = 5
+n_runs = 1
 
 all_rewards = np.empty([n_runs,eps])
 training = True
@@ -40,7 +40,7 @@ if not training:
 learning_rate, batch_size, arch, target_update_freq, replay_buffer_size = (0.0001, 32, 1, 10, 5000)
 freqs = [10]
 buffer_sizes = [5000]
-temp = 1.
+temps = [0.1,0.5,1,100]
 epsilon = 0.8
 arch = 4
 
@@ -54,17 +54,16 @@ try:
 except:
     pass
 
-ablation = [(True,True),(False,False),(True,False),(False,True)]
 
 for run in range(n_runs):
-    for comb in ablation:
+    for temp in temps:
         for target_update_freq in freqs:
             for replay_buffer_size in buffer_sizes:
                 rewards = learning(eps, learning_rate, batch_size, architecture=arch, target_update_freq=target_update_freq, 
-                                replay_buffer_size=replay_buffer_size, policy=policy, epsilon=epsilon, 
-                                path_to_weights=path_to_weights, temp=temp,replay_active=comb[0],target_active=comb[1])
+                                replay_buffer_size=replay_buffer_size, policy="softmax", epsilon=epsilon, 
+                                path_to_weights=path_to_weights, temp=temp,replay_active=True,target_active=True)
                 stamp = time.strftime("%d_%H%M%S",time.gmtime(time.time()))
-                np.save(f'runs/book/rew_T_{comb[1]}_E_{comb[0]}_{stamp}',rewards)
+                np.save(f'runs/book/rew_t{temp}_{stamp}',rewards)
 
 plt.savefig(f"runs/book/experiment_{stamp}.pdf")
 np.save(f"runs/book/experiment_{stamp}", all_rewards)

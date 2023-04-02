@@ -54,7 +54,7 @@ def softmax(temp, state, network):
     s_tensor = make_tensor(state, False)
     x = network.model.predict(s_tensor, verbose=0)
     z = x - max(x)  # substract max to prevent overflow of softmax
-    return np.argmax(np.exp(z)/np.sum(np.exp(z)))  # compute softmax
+    return np.argmax(np.exp(z/temp)/np.sum(np.exp(z/temp)))  # compute softmax
 
 
 def argmax(x):
