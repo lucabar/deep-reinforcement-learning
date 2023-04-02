@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 import sys
-from plotting import convolute
+from Helper import convolute
 
 
 def umschreib(liste: list):
@@ -22,8 +22,8 @@ labels = [r"$+TN +ER$", r"$-TN -ER$", r"$+TN -ER$", r"$-TN +ER$"]
 
 TT = umschreib(["rew_T_True_E_True_01_200921.npy","rew_T_True_E_True_02_042156.npy","rew_T_True_E_True_01_182906.npy"])
 FF = umschreib(["rew_T_False_E_False_02_121425.npy","rew_T_False_E_False_01_201455.npy","rew_T_False_E_False_01_183333.npy"])
-FT = umschreib(["rew_T_False_E_True_01_183858.npy"])
-TF = umschreib(["rew_T_True_E_False_01_200419.npy","rew_T_True_E_False_02_121941.npy"])
+FT = umschreib(["rew_T_False_E_True_01_183858.npy","rew_T_False_E_True_02_160747.npy"])
+TF = umschreib(["rew_T_True_E_False_01_200419.npy","rew_T_True_E_False_02_121941.npy","rew_T_True_E_False_02_170055.npy"])
 plt.title("Ablation study with and without TN and ER")
 rewards = [np.mean(combo, axis=0) for combo in [TT,FF,FT,TF]]
 colors = ['b','orange','g','r']
@@ -33,7 +33,8 @@ for j, plot in enumerate(rewards):
 plt.xlabel(r"Episodes")
 plt.ylabel(r"Reward")
 plt.legend()
-plt.savefig("ablation.png", dpi=400)
+plt.grid()
+plt.savefig("ablation.pdf")
 plt.show()
 
 """

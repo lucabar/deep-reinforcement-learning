@@ -4,23 +4,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-
-
-def simple_plot(y_vals, x_vals=None, file=None):
-    if x_vals:
-        plt.plot(x_vals, y_vals)
-    else:
-        plt.plot(y_vals)
-    if type(file) == str:
-        plt.title(file)
-        plt.savefig(f'runs/{file}.pdf')
-    plt.show()
-    return
-
-def convolute(array: np.array, dim: int = 10):
-    kernel_size = dim
-    kernel = np.ones(kernel_size) / kernel_size
-    return np.convolve(array, kernel, mode='same')
+from Helper import convolute
 
 args = sys.argv[1:]
 
@@ -33,20 +17,18 @@ if __name__ == "__main__":
     except:
         exit()
 
-    avg = round(np.mean(rewards[-50:]),3)
+    avg = round(np.mean(rewards),3)
     median = np.median(rewards)
-    plt.title(f"Experiment No.{count}")
+    print(f"avg: {avg}")
+    #plt.title(f"Final Cart Pole performance")
     if "mean" in args:
         rewards = np.mean(rewards,axis=0)
-    plt.plot(rewards)
-    plt.axhline(50, color='red')
-    # plt.savefig(f"runs/book/plots/exp1_count{count}.pdf")
-    plt.show()
-    plt.title(f"Experiment No.{count} (convoluted)")
-    # plt.plot(rewards_conv)
-    # plt.show()
-    print(f'count {count}, average last 50 eps: {avg}, median: {median}')
-
-    plt.title('Convoluted')
-    plt.plot(convolute(rewards)[:-10])  # end always goes down due to conv
+    plt.plot(rewards,alpha=0.2,color='b',label="Raw data")
+    plt.plot(np.arange(3,len(rewards)-3,1),convolute(rewards)[3:-3],color='b',label="Convolution of average (width 10)")  # end always goes down due to conv
+    plt.axhline(avg, color='red',linewidth=0.5,label= "Average")
+    plt.xlabel("Episodes")
+    plt.ylabel("Reward")
+    plt.legend()
+    plt.grid()
+    #plt.savefig(f"runs/book/plots/final_performance.png",dpi=400)
     plt.show()

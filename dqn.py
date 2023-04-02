@@ -4,7 +4,7 @@ from tensorflow import keras
 import numpy as np
 import time
 from collections import deque  # for experience replay
-from Helper import make_tensor, e_greedy, softmax, linear_anneal
+from Helper import make_tensor, e_greedy, softmax, linear_anneal, convolute
 import matplotlib.pyplot as plt
 import sys
 
@@ -108,7 +108,7 @@ class Q_Network():
             next_Q_values = self.model.predict(next_states)
             best_next_actions = np.argmax(next_Q_values, axis=1)
             next_mask = tf.one_hot(best_next_actions, 2).numpy()
-            next_best_Q_values = (target.predict(
+            next_best_Q_values = (target.model.predict(
                 next_states) * next_mask).sum(axis=1)
             target_Q_values = (rewards +
                                (1 - dones) * self.gamma * next_best_Q_values)
@@ -137,6 +137,7 @@ class DQN_Agent():
                  policy: str = 'epsilon', replay_active: bool = True):
         self.epsilon = epsilon
         self.epsilon_initial = epsilon
+        self.temp_initial = temp
         self.temp = temp
         self.policy = policy
         self.batch_size = batch_size
@@ -179,7 +180,7 @@ class DQN_Agent():
 
 
 def learning(eps, learning_rate, batch_size, architecture, target_update_freq, replay_buffer_size, policy: str = 'epsilon',
-             epsilon: float = 0.02, temp: float = 1., path_to_weights: str = None, replay_active: bool = True, target_active: bool = True, double_dqn: bool = True):
+             epsilon: float = 0.02, temp: float = 1., path_to_weights: str = None, replay_active: bool = True, target_active: bool = True, double_dqn: bool = False):
 
     start = time.time()
     stamp = time.strftime("%d_%H%M%S", time.gmtime(start))
@@ -211,6 +212,7 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
         # agent.epsilon = max(1 - episode / 500, 0.01)
         agent.epsilon = linear_anneal(
             episode, eps, agent.epsilon_initial, 0.01, 0.5)
+        agent.temp = linear_anneal(episode, eps, agent.temp_initial, 0.01, 0.5)
         # epsilon = max(1 - np.mean(ep_rewards)/200, 0.01)  # idea: couple annealing epsilon not to ep count but reward?
         cumulative_reward = 0
 
@@ -297,6 +299,8 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
 
 
 if __name__ == "__main__":
+    # this file can be run with: python dqn.py --target_active --experience_replay
+    
     args = sys.argv[1:]
     target_active, replay_active = False, False
 
@@ -311,44 +315,43 @@ if __name__ == "__main__":
     except:
         pass
 
-    eps = 400
-    n_runs = 5
+    eps = 500
+    n_runs = 1
 
     all_rewards = np.empty([n_runs, eps])
 
     training = True
 
     policy = "epsilon"
-    temps = [0.5]
     path_to_weights = None
 
     # w/out training
     if not training:
         path_to_weights = "insane_start_w_01_112419.h5"
-        path_to_weights = "w_01_143105.h5"
+        path_to_weights = "w_01_165502.h5"
         policy = "greedy"
 
-    double_dqn = False
-    learning_rate, batch_size, arch, target_update_freq, replay_buffer_size = (
-        0.0001, 32, 4, 10, 5000)
-    architectures = [4]
-    freqs = [10]
-    buffer_sizes = [5000]
-    epsilons = [0.5]
+    learning_rate, batch_size, arch, target_update_freq, replay_buffer_size = (0.0001, 32, 4, 10, 5000)
+    temp = 0.1
+    epsilon = 0.8
 
 
     for run in range(n_runs):
-        for epsilon in epsilons:
-            for arch in architectures:
-                for target_update_freq in freqs:
-                    for replay_buffer_size in buffer_sizes:
-                        rewards = learning(eps, learning_rate, batch_size, architecture=arch, target_update_freq=target_update_freq, 
-                                        replay_buffer_size=replay_buffer_size, policy=policy, epsilon=epsilon, 
-                                        path_to_weights=path_to_weights, temp=temp,replay_active=replay_active,target_active=target_active, double_dqn=double_dqn)
-                        #np.save(f'runs/book/rew_a{arch}_f{target_update_freq}_b{replay_buffer_size}_e{epsilon}',rewards)
-
+        rewards = learning(eps, learning_rate, batch_size, architecture=arch, target_update_freq=target_update_freq, 
+                        replay_buffer_size=replay_buffer_size, policy=policy, epsilon=epsilon, 
+                        path_to_weights=path_to_weights, temp=temp,replay_active=replay_active,target_active=target_active)
         all_rewards[run] = rewards
-        plt.plot(rewards)
+    if run > 0:
+        plt.plot(np.mean(all_rewards,axis=0), alpha=0.2, color = 'b', label = 'Raw data')
+        plt.plot(convolute(np.mean(all_rewards,axis=0)), color = 'b', label = 'Convoluted')
+    else:
+        plt.plot(rewards, alpha=0.2, color = 'b', label = 'Raw data')
+        plt.plot(convolute(rewards), color = 'b', label = 'Convoluted')
+    
+    plt.xlabel("Episode")
+    plt.ylabel("Reward")
+    plt.title(f"Learning with TN:{target_active} ER:{replay_active}")
+
     stamp = time.strftime("%d_%H%M%S", time.gmtime(time.time()))
-    plt.savefig(f"runs/book/experiment_{stamp}.pdf")
-    np.save(f"runs/book/experiment_{stamp}", all_rewards)
+    plt.savefig(f"data/exp_TN:{target_active}_ER:{replay_active}.pdf")
+    np.save(f"data/exp_TN:{target_active}_ER:{replay_active}", all_rewards)

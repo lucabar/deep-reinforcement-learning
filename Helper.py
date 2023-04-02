@@ -64,6 +64,10 @@ def argmax(x):
     except:
         return np.argmax(x)
 
+def convolute(array: np.array, dim: int = 10):
+    kernel_size = dim
+    kernel = np.ones(kernel_size) / kernel_size
+    return np.convolve(array, kernel, mode='same')
 
 def make_tensor(s, list: bool):
     '''in order to be used in net.predict() method'''
