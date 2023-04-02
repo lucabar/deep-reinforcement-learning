@@ -6,6 +6,8 @@ import time
 from collections import deque  # for experience replay
 from Helper import make_tensor, e_greedy, softmax, linear_anneal
 import matplotlib.pyplot as plt
+import sys
+
 
 np.random.seed(42)
 
@@ -21,8 +23,8 @@ class Q_Network():
         self.update_count = 0
         self.target_active = target_active
         activ = "elu"
-        init = "he_normal"
-        init = tf.keras.initializers.HeNormal(seed=42)
+        self.seed = 42
+        init = tf.keras.initializers.HeNormal(seed=self.seed)
         self.loss_fn = keras.losses.mean_squared_error
         self.path_to_weights = path_to_weights
         self.optimizer = optimizer
@@ -139,11 +141,7 @@ class DQN_Agent():
         self.policy = policy
         self.batch_size = batch_size
         self.replay_active = replay_active
-
         self.buffer = deque(maxlen=max_buffer)
-
-        self.states, self.actions, self.rewards, self.n_states, self.dones = [], [], [], [], []
-        self.sample = []  # init not really needed, just for overview of attributes
 
     def draw_action(self, state, network: Q_Network):
         '''
@@ -179,6 +177,7 @@ class DQN_Agent():
         self.buffer.append((state, action, reward, next_state, done))
 
 
+
 def learning(eps, learning_rate, batch_size, architecture, target_update_freq, replay_buffer_size, policy: str = 'epsilon',
              epsilon: float = 0.02, temp: float = 1., path_to_weights: str = None, replay_active: bool = True, target_active: bool = True, double_dqn: bool = True):
 
@@ -203,7 +202,7 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
     env = gym.make("CartPole-v1")
 
     ep_rewards = []
-    max_mean = 30
+    max_mean = 60
     budget = 0
 
     for episode in range(eps):
@@ -292,30 +291,42 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
 
     with open("runs/book/results/documentation.txt", 'a') as f:
         # export comand line output for later investigation
-        f.write("\nFAILED!!\n"+outp)
-
+        f.write("\n"+outp)
     env.close()
     return ep_rewards
 
 
 if __name__ == "__main__":
-    eps = 500
-    n_runs = 1
+    args = sys.argv[1:]
+    target_active, replay_active = False, False
+
+    try:
+        for arg in args:
+            if arg == "--target_active":
+                target_active = True
+                print("Target network active...")
+            elif arg == "--experience_replay":
+                replay_active = True
+                print("Experience replay active...")
+    except:
+        pass
+
+    eps = 400
+    n_runs = 5
 
     all_rewards = np.empty([n_runs, eps])
 
-    # hyperparameters
-    # architectures (incl activation and initialization)
-    # epsilon
-    # target_update_freq
-    # buffer_size
+    training = True
 
     policy = "epsilon"
-    temps = [1]
+    temps = [0.5]
     path_to_weights = None
+
     # w/out training
-    # path_to_weights= "insane_start_w_01_112419.h5"
-    # policy = "greedy"
+    if not training:
+        path_to_weights = "insane_start_w_01_112419.h5"
+        path_to_weights = "w_01_143105.h5"
+        policy = "greedy"
 
     double_dqn = False
     learning_rate, batch_size, arch, target_update_freq, replay_buffer_size = (
@@ -327,15 +338,14 @@ if __name__ == "__main__":
 
 
     for run in range(n_runs):
-        for temp in temps:
+        for epsilon in epsilons:
             for arch in architectures:
                 for target_update_freq in freqs:
                     for replay_buffer_size in buffer_sizes:
-                        for epsilon in epsilons:
-                            rewards = learning(eps, learning_rate, batch_size, architecture=arch, target_update_freq=target_update_freq,
-                                               replay_buffer_size=replay_buffer_size, policy=policy, epsilon=epsilon,
-                                               path_to_weights=path_to_weights, temp=temp, double_dqn=double_dqn)
-                            # np.save(f'runs/book/rew_a{arch}_f{target_update_freq}_b{replay_buffer_size}_e{epsilon}',rewards)
+                        rewards = learning(eps, learning_rate, batch_size, architecture=arch, target_update_freq=target_update_freq, 
+                                        replay_buffer_size=replay_buffer_size, policy=policy, epsilon=epsilon, 
+                                        path_to_weights=path_to_weights, temp=temp,replay_active=replay_active,target_active=target_active, double_dqn=double_dqn)
+                        #np.save(f'runs/book/rew_a{arch}_f{target_update_freq}_b{replay_buffer_size}_e{epsilon}',rewards)
 
         all_rewards[run] = rewards
         plt.plot(rewards)

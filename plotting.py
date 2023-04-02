@@ -27,26 +27,26 @@ args = sys.argv[1:]
 run = 1
 count = 0
 
+if __name__ == "__main__":
+    try:
+        rewards = np.load(f'runs/book/{args[0]}')
+    except:
+        exit()
 
-try:
-    rewards = np.load(f'runs/book/{args[0]}')
-except:
-    exit()
+    avg = round(np.mean(rewards[-50:]),3)
+    median = np.median(rewards)
+    plt.title(f"Experiment No.{count}")
+    if "mean" in args:
+        rewards = np.mean(rewards,axis=0)
+    plt.plot(rewards)
+    plt.axhline(50, color='red')
+    # plt.savefig(f"runs/book/plots/exp1_count{count}.pdf")
+    plt.show()
+    plt.title(f"Experiment No.{count} (convoluted)")
+    # plt.plot(rewards_conv)
+    # plt.show()
+    print(f'count {count}, average last 50 eps: {avg}, median: {median}')
 
-avg = round(np.mean(rewards[-50:]),3)
-# rewards_conv = np.mean(rewards.reshape(-1, 10), axis=1)
-median = np.median(rewards)
-plt.title(f"Experiment No.{count}")
-# plt.plot(np.mean(rewards,axis=0))
-plt.plot(rewards)
-plt.axhline(50, color='red')
-# plt.savefig(f"runs/book/plots/exp1_count{count}.pdf")
-plt.show()
-plt.title(f"Experiment No.{count} (convoluted)")
-# plt.plot(rewards_conv)
-# plt.show()
-print(f'count {count}, average last 50 eps: {avg}, median: {median}')
-
-plt.title('Convoluted')
-plt.plot(convolute(rewards))
-plt.show()
+    plt.title('Convoluted')
+    plt.plot(convolute(rewards)[:-10])  # end always goes down due to conv
+    plt.show()
