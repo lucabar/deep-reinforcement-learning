@@ -9,9 +9,6 @@ import matplotlib.pyplot as plt
 import sys
 
 
-np.random.seed(42)
-
-
 class Q_Network():
     '''General deep Q Network'''
 
@@ -180,11 +177,12 @@ class DQN_Agent():
 
 
 def learning(eps, learning_rate, batch_size, architecture, target_update_freq, replay_buffer_size, policy: str = 'epsilon',
-             epsilon: float = 0.02, temp: float = 1., path_to_weights: str = None, replay_active: bool = True, target_active: bool = True, double_dqn: bool = False):
-
+             epsilon: float = 0.02, temp: float = 1., path_to_weights: str = None, replay_active: bool = True, target_active: bool = True, 
+             double_dqn: bool = False, render: bool = False):
+    np.random.seed(42)
     start = time.time()
     stamp = time.strftime("%d_%H%M%S", time.gmtime(start))
-    outp = f"---Starting Test {stamp}---\nparams:{learning_rate, batch_size, architecture, target_update_freq, replay_buffer_size}"
+    outp = f"---Starting Test {stamp}---\n"  # params:{learning_rate, batch_size, architecture, target_update_freq, replay_buffer_size}
     print(outp)
 
     network = Q_Network(learning_rate, 'adam', architecture,
@@ -199,9 +197,13 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
     agent = DQN_Agent(batch_size, epsilon=epsilon, temp=temp,
                       max_buffer=replay_buffer_size, policy=policy, replay_active=replay_active)
 
+    
     # start the environment
-    env = gym.make("CartPole-v1")
-
+    if render:
+        env = gym.make("CartPole-v1", render_mode='human')
+    else:
+        env = gym.make("CartPole-v1")
+    
     ep_rewards = []
     max_mean = 60
     budget = 0
@@ -267,15 +269,15 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
             print(prnt)
 
         if episode % 10 == 0:
-            np.save(f"runs/book/rew_{stamp}.npy", np.array(ep_rewards))
+            np.save(f"runs/data/tmp/rew_{stamp}.npy", np.array(ep_rewards))
 
         if mean > max_mean and network.learning:
             max_mean = mean
-            prnt = "Saving weights..."
+            prnt = f"Saving weights at mean reward: {mean}..."
             print(prnt)
             outp += "\n"+prnt
             network.model.save_weights(
-                f"runs/book/weights/w_{stamp}.h5", overwrite=True)
+                f"runs/data/weights/w_{stamp}.h5", overwrite=True)
 
     # all episodes are done
         # save the mean/median after episodes are finished
@@ -291,7 +293,7 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
     print(prnt)
     outp += prnt
 
-    with open("runs/book/results/documentation.txt", 'a') as f:
+    with open("runs/data/documentation.txt", 'a') as f:
         # export comand line output for later investigation
         f.write("\n"+outp)
     env.close()
@@ -303,15 +305,18 @@ if __name__ == "__main__":
     
     args = sys.argv[1:]
     target_active, replay_active = False, False
+    training = True
 
     try:
         for arg in args:
             if arg == "--target_active":
                 target_active = True
-                print("Target network active...")
+                print("\nTarget network active...\n")
             elif arg == "--experience_replay":
                 replay_active = True
-                print("Experience replay active...")
+                print("\nExperience replay active...\n")
+            elif arg == "--no_training":
+                training = False
     except:
         pass
 
@@ -320,7 +325,6 @@ if __name__ == "__main__":
 
     all_rewards = np.empty([n_runs, eps])
 
-    training = True
 
     policy = "epsilon"
     path_to_weights = None
@@ -328,11 +332,10 @@ if __name__ == "__main__":
     # w/out training
     if not training:
         path_to_weights = "insane_start_w_01_112419.h5"
-        path_to_weights = "w_01_165502.h5"
-        policy = "greedy"
+        # path_to_weights = "w_01_165502.h5"
 
     learning_rate, batch_size, arch, target_update_freq, replay_buffer_size = (0.0001, 32, 4, 10, 5000)
-    temp = 0.1
+    temp = 1
     epsilon = 0.8
 
 
@@ -341,6 +344,7 @@ if __name__ == "__main__":
                         replay_buffer_size=replay_buffer_size, policy=policy, epsilon=epsilon, 
                         path_to_weights=path_to_weights, temp=temp,replay_active=replay_active,target_active=target_active)
         all_rewards[run] = rewards
+
     if run > 0:
         plt.plot(np.mean(all_rewards,axis=0), alpha=0.2, color = 'b', label = 'Raw data')
         plt.plot(convolute(np.mean(all_rewards,axis=0)), color = 'b', label = 'Convoluted')
@@ -353,5 +357,5 @@ if __name__ == "__main__":
     plt.title(f"Learning with TN:{target_active} ER:{replay_active}")
 
     stamp = time.strftime("%d_%H%M%S", time.gmtime(time.time()))
-    plt.savefig(f"data/exp_TN:{target_active}_ER:{replay_active}.pdf")
+    plt.savefig(f"figs/exp_TN:{target_active}_ER:{replay_active}.pdf")
     np.save(f"data/exp_TN:{target_active}_ER:{replay_active}", all_rewards)
