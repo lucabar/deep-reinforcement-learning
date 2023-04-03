@@ -85,7 +85,7 @@ class Q_Network():
         if path_to_weights:
             print("using pre-trained weights")
             self.learning = False
-            full_path_to_weights = "runs/book/weights/" + path_to_weights
+            full_path_to_weights = path_to_weights
             self.model.load_weights(full_path_to_weights)
         else:
             self.learning = True
@@ -175,14 +175,14 @@ class DQN_Agent():
         self.buffer.append((state, action, reward, next_state, done))
 
 
-
 def learning(eps, learning_rate, batch_size, architecture, target_update_freq, replay_buffer_size, policy: str = 'epsilon',
-             epsilon: float = 0.02, temp: float = 1., path_to_weights: str = None, replay_active: bool = True, target_active: bool = True, 
+             epsilon: float = 0.02, temp: float = 1., path_to_weights: str = None, replay_active: bool = True, target_active: bool = True,
              double_dqn: bool = False, render: bool = False):
     np.random.seed(42)
     start = time.time()
     stamp = time.strftime("%d_%H%M%S", time.gmtime(start))
-    outp = f"---Starting Test {stamp}---\n"  # params:{learning_rate, batch_size, architecture, target_update_freq, replay_buffer_size}
+    # params:{learning_rate, batch_size, architecture, target_update_freq, replay_buffer_size}
+    outp = f"---Starting Test {stamp}---\n"
     print(outp)
 
     network = Q_Network(learning_rate, 'adam', architecture,
@@ -197,13 +197,12 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
     agent = DQN_Agent(batch_size, epsilon=epsilon, temp=temp,
                       max_buffer=replay_buffer_size, policy=policy, replay_active=replay_active)
 
-    
     # start the environment
     if render:
         env = gym.make("CartPole-v1", render_mode='human')
     else:
         env = gym.make("CartPole-v1")
-    
+
     ep_rewards = []
     max_mean = 60
     budget = 0
@@ -241,7 +240,8 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
 
             # do training
             states, actions, rewards, next_states, dones = agent.draw_sample()
-            network.update(states, actions, rewards, next_states, dones, target)
+            network.update(states, actions, rewards,
+                           next_states, dones, target)
 
             # update target (every episode when target network is False)
             if not network.target_active:
@@ -269,7 +269,7 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
             print(prnt)
 
         if episode % 10 == 0:
-            np.save(f"runs/data/tmp/rew_{stamp}.npy", np.array(ep_rewards))
+            np.save(f"rew_{stamp}.npy", np.array(ep_rewards))
 
         if mean > max_mean and network.learning:
             max_mean = mean
@@ -277,7 +277,7 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
             print(prnt)
             outp += "\n"+prnt
             network.model.save_weights(
-                f"runs/data/weights/w_{stamp}.h5", overwrite=True)
+                f"w_{stamp}.h5", overwrite=True)
 
     # all episodes are done
         # save the mean/median after episodes are finished
@@ -293,7 +293,7 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
     print(prnt)
     outp += prnt
 
-    with open("runs/data/documentation.txt", 'a') as f:
+    with open("documentation.txt", 'a') as f:
         # export comand line output for later investigation
         f.write("\n"+outp)
     env.close()
@@ -302,7 +302,7 @@ def learning(eps, learning_rate, batch_size, architecture, target_update_freq, r
 
 if __name__ == "__main__":
     # this file can be run with: python dqn.py --target_active --experience_replay
-    
+
     args = sys.argv[1:]
     target_active, replay_active = False, False
     training = True
@@ -338,49 +338,51 @@ if __name__ == "__main__":
     policy = "epsilon"
     path_to_weights = None
 
-    # w/out training
+    learning_rate, batch_size, arch, target_update_freq, replay_buffer_size = (
+        0.0001, 32, 4, 10, 5000)
+
     if not training:
         path_to_weights = "good_w_01_112419.h5"
-        # path_to_weights = "w_01_165502.h5"
-
-    learning_rate, batch_size, arch, target_update_freq, replay_buffer_size = (0.0001, 32, 4, 10, 5000)
+        arch = 1
     if dueling:
         arch = "Dueling"
-    temp = 1
-    epsilon = 0.8
 
+    temp = 1
+    epsilon = 1.0
 
     for run in range(n_runs):
-        rewards = learning(eps, learning_rate, batch_size, architecture=arch, target_update_freq=target_update_freq, 
-                        replay_buffer_size=replay_buffer_size, policy=policy, epsilon=epsilon, 
-                        path_to_weights=path_to_weights, temp=temp,replay_active=replay_active,target_active=target_active, double_dqn=double_dqn)
+        rewards = learning(eps, learning_rate, batch_size, architecture=arch, target_update_freq=target_update_freq,
+                           replay_buffer_size=replay_buffer_size, policy=policy, epsilon=epsilon,
+                           path_to_weights=path_to_weights, temp=temp, replay_active=replay_active, target_active=target_active, double_dqn=double_dqn)
         all_rewards[run] = rewards
 
-    
     if run > 0:
-        plt.plot(np.mean(all_rewards,axis=0), alpha=0.2, color = 'tab:blue', label = 'Raw data')
-        plt.plot(convolute(np.mean(all_rewards,axis=0)), color = 'tab:blue', label = 'Convoluted')
+        plt.plot(np.mean(all_rewards, axis=0), alpha=0.2,
+                 color='tab:blue', label='Raw data')
+        plt.plot(convolute(np.mean(all_rewards, axis=0)),
+                 color='tab:blue', label='Convoluted')
     else:
-        plt.plot(rewards, alpha=0.2, color = 'tab:b', label = 'Raw data')
-        plt.plot(convolute(rewards), color = 'tab:b', label = 'Convoluted')
-    
+        plt.plot(rewards, alpha=0.2, color='tab:b', label='Raw data')
+        plt.plot(convolute(rewards), color='tab:b', label='Convoluted')
+
     plt.xlabel("Episode")
     plt.ylabel("Reward")
     stamp = time.strftime("%d_%H%M%S", time.gmtime(time.time()))
 
     if target_active or replay_active:
         plt.title(f"Learning with TN:{target_active} ER:{replay_active}")
-        plt.savefig(f"figs/exp_TN:{target_active}_ER:{replay_active}_{stamp}.pdf")
-        np.save(f"data/rewards_TN({target_active})_ER({replay_active})_{stamp}", all_rewards)
+        plt.savefig(f"exp_TN:{target_active}_ER:{replay_active}_{stamp}.pdf")
+        np.save(
+            f"rewards_TN({target_active})_ER({replay_active})_{stamp}", all_rewards)
     elif not training:
         plt.title(f"Performance on pre-trained weights")
-        plt.savefig(f"figs/pre-trained_{stamp}.pdf")
-        np.save(f"data/pre-trained_{stamp}", all_rewards)
+        plt.savefig(f"pre-trained_{stamp}.pdf")
+        np.save(f"pre-trained_{stamp}", all_rewards)
     elif double_dqn:
         plt.title(f"Double Deep Q Network")
-        plt.savefig(f"figs/double_dqn_{stamp}.pdf")
-        np.save(f"data/rewards_double_dqn_{stamp}", all_rewards)
+        plt.savefig(f"double_dqn_{stamp}.pdf")
+        np.save(f"rewards_double_dqn_{stamp}", all_rewards)
     elif dueling:
         plt.title(f"Dueling Deep Q Network")
-        plt.savefig(f"figs/dueling_dqn_{stamp}.pdf")
-        np.save(f"data/rewards_dueling_dqn_{stamp}", all_rewards)
+        plt.savefig(f"dueling_dqn_{stamp}.pdf")
+        np.save(f"rewards_dueling_dqn_{stamp}", all_rewards)
