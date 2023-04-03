@@ -1606,3 +1606,39 @@ It took 33.82mins.
 Mean reward:nan, median: nan
 Time: 33.82mins
 
+
+---Starting Test 02_190405---
+params:(0.0001, 32, 1, 10, 5000)
+Not learning, but playing...
+It took 36.77mins.
+
+Mean reward:nan, median: nan
+Time: 36.77mins
+
+
+---Starting Test 02_194052---
+params:(0.0001, 32, 1, 10, 5000)
+Not learning, but playing...
+It took 27.06mins.
+
+Mean reward:nan, median: nan
+Time: 27.06mins
+
+
+---Starting Test 02_200756---
+params:(0.0001, 32, 1, 10, 5000)
+Not learning, but playing...
+It took 31.34mins.
+
+Mean reward:nan, median: nan
+Time: 31.34mins
+
+
+---Starting Test 02_203917---
+params:(0.0001, 32, 1, 10, 5000)
+Not learning, but playing...
+It took 61.02mins.
+
+Mean reward:nan, median: nan
+Time: 61.02mins
+

@@ -24,7 +24,7 @@ if __name__ == "__main__":
     if "mean" in args:
         rewards = np.mean(rewards,axis=0)
     plt.plot(rewards,alpha=0.2,color='b',label="Raw data")
-    plt.plot(np.arange(3,len(rewards)-3,1),convolute(rewards)[3:-3],color='b',label="Convolution of average (width 10)")  # end always goes down due to conv
+    plt.plot(convolute(rewards,5),color='b',label="Convolution of average (width 10)")  # end always goes down due to conv
     plt.axhline(avg, color='red',linewidth=0.5,label= "Average")
     plt.xlabel("Episodes")
     plt.ylabel("Reward")
