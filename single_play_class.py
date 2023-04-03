@@ -331,7 +331,7 @@ if __name__ == "__main__":
     double_dqn = False
     learning_rate, batch_size, arch, target_update_freq, replay_buffer_size = (
         0.0001, 32, 4, 10, 5000)
-    architectures = [4]
+    architectures = ['Dueling']
     freqs = [10]
     buffer_sizes = [5000]
     epsilons = [0.5]
@@ -339,13 +339,14 @@ if __name__ == "__main__":
 
     for run in range(n_runs):
         for epsilon in epsilons:
-            for arch in architectures:
-                for target_update_freq in freqs:
-                    for replay_buffer_size in buffer_sizes:
-                        rewards = learning(eps, learning_rate, batch_size, architecture=arch, target_update_freq=target_update_freq, 
-                                        replay_buffer_size=replay_buffer_size, policy=policy, epsilon=epsilon, 
-                                        path_to_weights=path_to_weights, temp=temp,replay_active=replay_active,target_active=target_active, double_dqn=double_dqn)
-                        #np.save(f'runs/book/rew_a{arch}_f{target_update_freq}_b{replay_buffer_size}_e{epsilon}',rewards)
+            for temp in temps:
+                for arch in architectures:
+                    for target_update_freq in freqs:
+                        for replay_buffer_size in buffer_sizes:
+                            rewards = learning(eps, learning_rate, batch_size, architecture=arch, target_update_freq=target_update_freq, 
+                                            replay_buffer_size=replay_buffer_size, policy=policy, epsilon=epsilon, 
+                                            path_to_weights=path_to_weights, temp=temp,replay_active=replay_active,target_active=target_active, double_dqn=double_dqn)
+                            #np.save(f'runs/book/rew_a{arch}_f{target_update_freq}_b{replay_buffer_size}_e{epsilon}',rewards)
 
         all_rewards[run] = rewards
         plt.plot(rewards)

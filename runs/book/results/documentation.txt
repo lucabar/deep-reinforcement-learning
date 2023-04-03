@@ -1049,3 +1049,49 @@ It took 4.5mins.
 Mean reward:9.456, median: 9.0
 Time: 4.5mins
 
+
+---Starting Test 03_073652---
+params:(0.0001, 32, 'Dueling', 10, 5000)
+Saving weights...
+We're now learning...Average of last 50: 59.12Average of last 50: 52.96Average of last 50: 55.18Average of last 50: 48.68Average of last 50: 41.68Average of last 50: 48.98
+It took 14.02mins.
+
+Mean reward:51.537, median: 46.0
+Time: 14.02mins
+
+
+---Starting Test 03_075054---
+params:(0.0001, 32, 'Dueling', 10, 5000)
+We're now learning...Average of last 50: 14.44Average of last 50: 14.38Average of last 50: 10.44Average of last 50: 9.52Average of last 50: 9.38Average of last 50: 9.28
+It took 3.31mins.
+
+Mean reward:10.986, median: 10.0
+Time: 3.31mins
+
+
+---Starting Test 03_075412---
+params:(0.0001, 32, 'Dueling', 10, 5000)
+We're now learning...Average of last 50: 35.84Average of last 50: 23.0Average of last 50: 14.3Average of last 50: 11.24Average of last 50: 10.06Average of last 50: 9.48
+It took 4.8mins.
+
+Mean reward:16.274, median: 11.0
+Time: 4.8mins
+
+
+---Starting Test 03_075900---
+params:(0.0001, 32, 'Dueling', 10, 5000)
+We're now learning...Average of last 50: 43.7Average of last 50: 45.68Average of last 50: 26.76Average of last 50: 21.12Average of last 50: 18.34Average of last 50: 16.0
+It took 6.93mins.
+
+Mean reward:26.4, median: 20.5
+Time: 6.93mins
+
+
+---Starting Test 03_080556---
+params:(0.0001, 32, 'Dueling', 10, 5000)
+We're now learning...Average of last 50: 13.6Average of last 50: 23.22Average of last 50: 19.86Average of last 50: 14.2Average of last 50: 11.18Average of last 50: 9.6
+It took 4.16mins.
+
+Mean reward:14.426, median: 12.0
+Time: 4.16mins
+
