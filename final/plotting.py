@@ -22,7 +22,7 @@ if __name__ == "__main__":
     titles = []
     for arg in args:
         try:
-            rewards.append(np.load(f'data/{arg}'))
+            rewards.append(np.load(f'{arg}'))
             titles.append(arg)
         except:
             continue
